@@ -28,7 +28,7 @@ const REPOS = [
   ["facebookresearch/segment-anything", "55.2k"], ["storytold/craft-anything", "42.1k"], ["HKUDS/RAG-Anything", "24.8k"],
   ["DepthAnything/Depth-Anything-V2", "9.2k"], ["erkamyaman/rust-anything", "8.7k"], ["geekyutao/Inpaint-Anything", "7.7k"],
   ["gaomingqi/Track-Anything", "7.0k"], ["EL4CTEO/fast-anything", "3.1k"], ["sail-sg/EditAnything", "3.4k"], ["OpenGVLab/Ask-Anything", "3.4k"],
-  ["ttengwang/Caption-Anything", "1.8k"], ["zhayujie/bot-on-anything", "4.2k"], ["goodnight000/api-anything", "3.8k"], ["EL4CTEO/shrink-anything", "new"],
+  ["ttengwang/Caption-Anything", "1.8k"], ["zhayujie/bot-on-anything", "4.2k"], ["goodnight000/api-anything", "3.8k"], ["EL4CTEO/shrink-anything", "new"], ["you/your-idea-anything", "0"],
 ];
 function scene1(t) { // 0..3.6s
   g.fillStyle = BG; g.fillRect(0, 0, W, H);
@@ -46,7 +46,8 @@ function scene1(t) { // 0..3.6s
     const y = 100 + i * 44 - scroll * ease(clamp((t - 1.2) / 0.3));
     const x = 40 + (1 - k) * 300;
     g.globalAlpha = k;
-    rr(x, y, 560, 36, 8); g.fillStyle = PANEL; g.fill(); g.strokeStyle = "#30363d"; g.lineWidth = 1; g.stroke();
+    const mine = i === REPOS.length - 1;
+    rr(x, y, 560, 36, 8); g.fillStyle = mine ? "#2a1645" : PANEL; g.fill(); g.strokeStyle = mine ? VIOLET : "#30363d"; g.lineWidth = mine ? 2 : 1; g.stroke();
     const [name, stars] = REPOS[i];
     const cut = name.toLowerCase().lastIndexOf("anything");
     g.font = "16px Mono"; g.textBaseline = "middle"; g.textAlign = "left";
@@ -56,6 +57,7 @@ function scene1(t) { // 0..3.6s
     const w1 = g.measureText(name.slice(cut, cut + 8)).width;
     g.fillStyle = TEXT; g.fillText(name.slice(cut + 8), x + 14 + w0 + w1, y + 18);
     text("★ " + stars, x + 546, y + 18, "14px Sans", "#d29922", "right");
+    if (mine && t > times[i] + 0.35) text("(soon)", x + 470, y + 18, "italic 14px Sans", VIOLET, "right");
     g.globalAlpha = 1;
   }
   // header stays on top of the scrolling cards
@@ -73,25 +75,43 @@ function scene1(t) { // 0..3.6s
 // ---- scene 2: the thought ----
 function scene2(t) { // 0..2.4
   g.fillStyle = BG; g.fillRect(0, 0, W, H);
-  // a little dev at a laptop
+  // a dev in a hoodie, lit by the laptop
   const cx = 200, cy = 300;
-  g.fillStyle = "#2a2f3a"; rr(cx - 70, cy + 20, 140, 12, 4); g.fill();
-  g.fillStyle = "#3a4150"; rr(cx - 55, cy - 50, 110, 72, 6); g.fill();
-  g.fillStyle = VIOLET; g.globalAlpha = 0.5 + 0.5 * Math.sin(t * 9); rr(cx - 45, cy - 40, 90, 52, 4); g.fill(); g.globalAlpha = 1;
-  g.fillStyle = "#f2c9a0"; g.beginPath(); g.arc(cx, cy - 110, 34, 0, Math.PI * 2); g.fill();
-  g.fillStyle = TEXT; g.beginPath(); g.arc(cx - 11, cy - 114, 3.5, 0, 7); g.arc(cx + 11, cy - 114, 3.5, 0, 7); g.fill();
-  g.strokeStyle = TEXT; g.lineWidth = 3; g.beginPath();
-  if (t < 1.2) g.arc(cx, cy - 104, 11, 0.2, Math.PI - 0.2); else { g.moveTo(cx - 9, cy - 96); g.lineTo(cx + 9, cy - 96); }
+  const glow = g.createRadialGradient(cx, cy - 60, 10, cx, cy - 60, 170);
+  glow.addColorStop(0, "rgba(167,112,255,0.35)"); glow.addColorStop(1, "rgba(167,112,255,0)");
+  g.fillStyle = glow; g.fillRect(cx - 200, cy - 240, 400, 360);
+  g.fillStyle = "#3b2a5c"; rr(cx - 62, cy - 78, 124, 120, 40); g.fill(); // hoodie
+  g.fillStyle = "#2a1d43"; g.beginPath(); g.arc(cx, cy - 108, 46, Math.PI, 0); g.fill(); // hood
+  g.fillStyle = "#f2c9a0"; g.beginPath(); g.arc(cx, cy - 108, 34, 0, Math.PI * 2); g.fill(); // face
+  g.fillStyle = "#2a2f3a"; rr(cx - 80, cy + 20, 160, 12, 4); g.fill(); // laptop
+  g.fillStyle = "#3a4150"; rr(cx - 62, cy - 46, 124, 70, 6); g.fill();
+  g.fillStyle = "#1b1f2a"; rr(cx - 54, cy - 38, 108, 54, 4); g.fill();
+  g.fillStyle = PINK; g.font = "11px Mono"; g.textAlign = "left"; g.fillText("-anything", cx - 46, cy - 22);
+  g.fillStyle = MUTED; g.fillText("-anything", cx - 46, cy - 8); g.fillText("-anyth", cx - 46, cy + 6);
+  const blink = (t % 1.3) > 1.2;
+  const worried = t > 1.25;
+  g.fillStyle = INK;
+  if (blink) { g.fillRect(cx - 15, cy - 114, 9, 2); g.fillRect(cx + 6, cy - 114, 9, 2); }
+  else { g.beginPath(); g.arc(cx - 11, cy - 114, worried ? 2.5 : 3.5, 0, 7); g.arc(cx + 11, cy - 114, worried ? 2.5 : 3.5, 0, 7); g.fill(); }
+  g.strokeStyle = INK; g.lineWidth = 2.5; g.beginPath();
+  if (!worried) g.arc(cx, cy - 102, 10, 0.25, Math.PI - 0.25);
+  else { g.moveTo(cx - 8, cy - 94); g.quadraticCurveTo(cx, cy - 99, cx + 8, cy - 94); }
   g.stroke();
+  if (worried) { // a sweat drop
+    const dy = ((t - 1.25) * 30) % 20;
+    g.fillStyle = "#7cc4ff"; g.beginPath(); g.moveTo(cx + 30, cy - 130 + dy); g.quadraticCurveTo(cx + 37, cy - 118 + dy, cx + 30, cy - 114 + dy); g.quadraticCurveTo(cx + 23, cy - 118 + dy, cx + 30, cy - 130 + dy); g.fill();
+  }
   // bubbles
   const bub = (x, y, w, h, s, color, k) => {
+    const pop = k <= 0 ? 0 : k >= 1 ? 1 : 1 + 0.12 * Math.sin(Math.PI * k) ;
+    g.save(); g.translate(x + w / 2, y + h / 2); g.scale(pop * ease(k) || 0.001, pop * ease(k) || 0.001); g.translate(-(x + w / 2), -(y + h / 2));
     g.globalAlpha = ease(k); rr(x, y, w, h, 18); g.fillStyle = "#eceef4"; g.fill();
     g.beginPath(); g.arc(x + 20, y + h + 12, 8, 0, 7); g.arc(x + 4, y + h + 28, 5, 0, 7); g.fill();
-    text(s, x + w / 2, y + h / 2, "24px 'Sans Bold'", color, "center"); g.globalAlpha = 1;
+    text(s, x + w / 2, y + h / 2, "24px 'Sans Bold'", color, "center"); g.globalAlpha = 1; g.restore();
   };
   bub(290, 70, 420, 70, "I should make an -anything.", INK, (t - 0.15) / 0.3);
   if (t > 1.2) bub(330, 170, 340, 70, "...anything what?", RED, (t - 1.2) / 0.25);
-  if (t > 1.7) text("?", 175 + Math.sin(t * 20) * 3, 150, "46px 'Sans Bold'", PINK, "center");
+  if (t > 1.7) text("?", 250, 150 - 6 * ease((t - 1.7) / 0.3), "46px 'Sans Bold'", PINK, "center");
 }
 
 // ---- terminal helpers ----
@@ -123,7 +143,8 @@ function scene3(t) { // 0..2.6
 
 // ---- scene 4: slot machine montage ----
 const WORDS = ["excuse", "monday", "vibes", "toaster", "meeting", "breakup", "pizza", "deadline", "cat", "standup", "taxes", "nap"];
-const PICKS = [["excuse", "3 commands", "12/12"], ["monday", "2 commands", "8/8"], ["vibes", "a web app", "5/5"], ["toaster", "any stack", "4/4"]];
+const PICKS = [["secrets", "built by Claude", "12/12"], ["excuse", "3 commands", "9/9"], ["monday", "a web app", "5/5"], ["toaster", "any stack", "4/4"]];
+const RAPID = ["cat", "taxes", "nap", "standup", "vibes", "deadline", "pizza"];
 function scene4(t) { // 0..4.0, one pick per second
   const lines = [];
   const step = Math.min(3, Math.floor(t / 1.0));
@@ -136,7 +157,11 @@ function scene4(t) { // 0..4.0, one pick per second
     if (lt > 0.55) lines.push([["✓ ", GREEN, true], [word + "-anything", TEXT, true], [" works: " + what + ", " + ex + " examples", MUTED]]);
     else lines.push([["", TEXT]]);
   }
-  if (t > 3.6) lines.push([["  (yes, they all pass their own tests)", VIOLET]]);
+  if (t > 4.0) {
+    const n = Math.min(RAPID.length, Math.floor((t - 4.0) / 0.14) + 1);
+    lines.push([["$ ", GREEN], ["new ", MUTED], ...RAPID.slice(0, n).map((w) => [w + " ✓  ", PINK])]);
+  }
+  if (t > 5.1) lines.push([["  (yes, every one passes its own tests)", VIOLET]]);
   term(lines);
 }
 
@@ -174,26 +199,41 @@ function scene5(t) { // 0..3.4
   }
 }
 
-const SCENES = [[scene1, 3.6], [scene2, 2.4], [scene3, 2.8], [scene4, 4.2], [scene5, 3.8]];
 const gif = GIFEncoder();
+let prev = null;
+function emit(data, delay) {
+  // pixels that didn't change since the last frame become transparent: far smaller file, same picture
+  const palette = quantize(data, 255);
+  const index = applyPalette(data, palette);
+  if (prev) for (let i = 0, p = 0; i < index.length; i++, p += 4) {
+    if (data[p] === prev[p] && data[p + 1] === prev[p + 1] && data[p + 2] === prev[p + 2]) index[i] = 255;
+  }
+  while (palette.length < 256) palette.push([0, 0, 0]);
+  gif.writeFrame(index, W, H, prev ? { palette, delay, transparent: true, transparentIndex: 255, dispose: 1 } : { palette, delay, repeat: 0 });
+  prev = Uint8ClampedArray.from(data);
+}
+const SCENES = [[scene1, 4.4], [scene2, 2.8], [scene3, 3.0], [scene4, 6.0], [scene5, 4.0]];
+const FADE = 0.2;
+
 let frames = 0;
 for (const [scene, len] of SCENES) {
   const n = Math.round(len * FPS);
   for (let f = 0; f < n; f++) {
-    scene(f / FPS);
-    const { data } = g.getImageData(0, 0, W, H);
-    const palette = quantize(data, 256);
-    gif.writeFrame(applyPalette(data, palette), W, H, { palette, delay: 1000 / FPS, repeat: 0 });
+    const t = f / FPS;
+    scene(t);
+    const fade = Math.min(1, t / FADE, (len - t) / FADE);
+    if (fade < 1 && !(scene === SCENES[0][0] && t < FADE)) { g.globalAlpha = 1 - Math.max(0, fade); g.fillStyle = BG; g.fillRect(0, 0, W, H); g.globalAlpha = 1; }
+    emit(g.getImageData(0, 0, W, H).data, 1000 / FPS);
     frames++;
   }
   // hold the last frame of the last scene a moment longer
 }
-scene5(3.8);
-{ const { data } = g.getImageData(0, 0, W, H); const palette = quantize(data, 256); gif.writeFrame(applyPalette(data, palette), W, H, { palette, delay: 1800 }); }
+scene5(4.0);
+emit(g.getImageData(0, 0, W, H).data, 1800);
 gif.finish();
 writeFileSync(process.argv[2] ?? "trend.gif", gif.bytes());
 // stills for checking
-for (const [i, [scene, at]] of [[scene1, 3.3], [scene2, 2.2], [scene3, 2.6], [scene4, 4.0], [scene5, 3.6]].entries()) {
+for (const [i, [scene, at]] of [[scene1, 4.2], [scene2, 2.5], [scene3, 2.7], [scene4, 5.6], [scene5, 3.8]].entries()) {
   scene(at); writeFileSync("still-" + (i + 1) + ".png", c.toBuffer("image/png"));
 }
 console.log("frames", frames + 1);
