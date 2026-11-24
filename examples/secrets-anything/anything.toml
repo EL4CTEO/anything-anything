@@ -1,0 +1,216 @@
+# secrets-anything: made with anything-anything. `anything-anything spec` explains every field.
+
+name = "secrets-anything"
+pitch = "Find leaked API keys, tokens, passwords and private keys in any codebase, in any language, before you push. Fast, offline, no false alarms on test fixtures."
+tagline = "No secret leaves your machine."
+when = "Use when the user is about to commit or push, asks whether a repo, file or diff contains leaked credentials, or wants text checked for API keys, tokens, passwords or private keys."
+version = "0.1.0"
+stack = "rust-cli"
+owner = "EL4CTEO"
+color = "#dc2626"
+keywords = ["secrets", "security", "credentials", "api-keys", "tokens", "leak", "pre-commit", "scanner"]
+notes = """
+A fast, offline secret scanner. Built-in rules only, no network, no config file to start.
+
+How it works
+- Walk the folder in parallel (the `ignore` crate's WalkParallel). Honor .gitignore, .ignore and
+  .git/info/exclude even outside a git repo (require_git(false)): ignored files are never pushed.
+  Always skip .git, node_modules, target, dist, build, vendor, .venv, lock files (package-lock.json,
+  yarn.lock, pnpm-lock.yaml, Cargo.lock, poetry.lock, uv.lock, go.sum, composer.lock, Gemfile.lock),
+  *.min.js, files over 1 MiB and binary files (a NUL byte in the first 8 KiB). Invalid UTF-8 is read lossily.
+- `scan` takes a folder or a single file. Paths are printed relative to the scanned folder, with `/`.
+  A single file is printed as given.
+- Match every line against one RegexSet of all rules, then the individual regexes only for lines that hit.
+- One finding per span: when several rules match overlapping text, the most specific wins
+  (any named rule beats password-assignment). Findings are sorted by path, then line, then column.
+- line and column are 1-based; column counts characters (not bytes) to the first character of the secret.
+
+Rules, in this order (`rules` lists them like this):
+  private-key          -----BEGIN ... PRIVATE KEY----- (RSA, EC, DSA, OPENSSH, PGP, plain); the match is the BEGIN line
+  aws-access-key       (AKIA|ASIA|ABIA|ACCA)[A-Z0-9]{16}
+  aws-secret-key       a 40-char base64 value assigned to a key containing both "aws" and "secret"
+  github-token         gh[pousr]_[A-Za-z0-9]{36,}, github_pat_[A-Za-z0-9_]{82}
+  gitlab-token         glpat-[A-Za-z0-9_-]{20,}
+  slack-token          xox[baprs]-[A-Za-z0-9-]{10,}
+  slack-webhook        https://hooks.slack.com/services/T.../B.../...
+  stripe-key           (sk|rk)_live_[A-Za-z0-9]{24,}   (test keys, sk_test_, are not secrets)
+  google-api-key       AIza[A-Za-z0-9_-]{35}
+  openai-key           sk-(proj-|svcacct-)?[A-Za-z0-9_-]{40,} that isn't an anthropic key
+  anthropic-key        sk-ant-[A-Za-z0-9_-]{40,}
+  npm-token            npm_[A-Za-z0-9]{36}
+  jwt                  eyJ...\\.eyJ...\\.<signature>, three base64url parts of 10+ chars each
+  url-credentials      scheme://user:password@host; the secret is the password
+  password-assignment  a key containing password, passwd, pwd, secret, token, api_key, apikey,
+                       access_key, private_key, client_secret, auth or credential (any case, any
+                       separator), assigned with = := : => or as a JSON/YAML key, to a value of
+                       8+ chars that has at least 3 of: lowercase, uppercase, digit, symbol.
+                       In code files only quoted string literals count (so process.env.X, os.environ["X"],
+                       config.password are not values); in config files (.env*, .yaml, .yml, .toml, .ini,
+                       .cfg, .conf, .properties, .json) unquoted values count too. A file with no
+                       extension (and `check`'s default "stdin") is treated as code.
+
+No false alarms: a match is skipped (and counted in `skipped`) when
+- it's in a fixture: any path segment is fixtures, fixture, __fixtures__, testdata, test-data,
+  __mocks__, mocks, __snapshots__ or snapshots, or the file name ends in .example, .sample,
+  .template, .dist or .snap (like .env.example);
+- the value is a placeholder: it contains (any case) example, sample, dummy, placeholder, your,
+  xxxx, changeme, redacted or "<"; it's wrapped in ${...}, {{...}}, %(...)s or $VAR; it's one
+  repeated character; or it's the password half of user:password / root:root style defaults;
+- the line has the comment marker `secrets-anything: allow`.
+`--all` turns the first two off (the inline marker always wins) and reports them as findings.
+
+Output (never print a whole secret anywhere: text, json or MCP)
+- secret is redacted: its first 4 characters, then "****" (AKIA****, ghp_****, ----****).
+- Text, one line per finding, then a summary:
+    config.py:2:12  aws-access-key  AKIA****
+    1 secret found
+  Plural: "3 secrets found". None: "no secrets found". When something was skipped, add
+  " (N skipped as fixtures or placeholders, --all to show)" to the summary line.
+- JSON: {"count": n, "skipped": m, "findings": [{"path", "line", "column", "rule", "secret"}]}.
+- Exit 1 when count > 0, else 0, so it works as a pre-commit/pre-push hook and in CI.
+- `check` reads text from stdin (a diff, a file, a paste) and reports it like a single file named
+  --name (default "stdin"). The name drives the fixture and config-file rules.
+- `rules`: one line per rule, "id  about"; JSON {"count": 15, "rules": [{"id", "about"}]}.
+
+The example secrets in this file are fake, and written with TOML \\u escapes (gh\\u0070_, AKI\\u0041,
+PRIV\\u0041TE) so the raw anything.toml matches no rule: `secrets-anything scan .` on this repo must
+report nothing. Keep it that way in tests too.
+
+Out of scope: git history, checking whether a key is live (that needs the network), entropy-only
+detection of unlabeled random strings (the main source of false alarms), custom rule files, auto-fixing.
+"""
+
+[[command]]
+name = "scan"
+about = "Find leaked secrets in a folder or file"
+
+[[command.arg]]
+name = "path"
+kind = "path"
+help = "Folder or file to scan"
+positional = true
+default = "."
+
+[[command.arg]]
+name = "all"
+kind = "bool"
+help = "Also report matches in test fixtures and placeholder values"
+
+[[command]]
+name = "check"
+about = "Find leaked secrets in text from stdin"
+
+[[command.arg]]
+name = "name"
+kind = "string"
+help = "File name to report the text as; drives the fixture and config-file rules"
+default = "stdin"
+
+[[command]]
+name = "rules"
+about = "List the built-in detection rules"
+
+# --- scan ---
+
+[[example]]
+name = "finds an aws key in python"
+args = ["scan", "."]
+files = { "config.py" = "import os\nAWS_KEY = \"AKIAQ3EGRIPJWXZH4LNT\"\n" }
+exit = 1
+stdout = ["config.py:2:12", "aws-access-key", "AKIA****", "1 secret found"]
+not_stdout = ["Q3EGRIPJWXZH4LNT"]
+json = { "/count" = 1, "/skipped" = 0, "/findings/0/path" = "config.py", "/findings/0/line" = 2, "/findings/0/column" = 12, "/findings/0/rule" = "aws-access-key", "/findings/0/secret" = "AKIA****" }
+
+[[example]]
+name = "finds secrets across languages and file types"
+args = ["scan"]
+files = { "main.go" = "package main\n\nconst token = \"ghp_R7mK2xQ9vLpW4nT8sYc3BfH6jD1aZ5eU0oGi\"\n", "deploy/id_ed25519" = "-----BEGIN OPENSSH PRIVATE KEY-----\nb3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQ\n-----END OPENSSH PRIVATE KEY-----\n", "settings.yaml" = "database:\n  password: Tr0ub4dor-xK9q2\n" }
+exit = 1
+stdout = ["deploy/id_ed25519:1:1", "private-key", "main.go:3:16", "github-token", "ghp_****", "settings.yaml:2:13", "password-assignment", "Tr0u****", "3 secrets found"]
+not_stdout = ["R7mK2xQ9vLpW4nT8sYc3", "b4dor-xK9q2"]
+json = { "/count" = 3, "/findings/0/rule" = "private-key", "/findings/1/rule" = "github-token", "/findings/1/line" = 3, "/findings/2/rule" = "password-assignment", "/findings/2/path" = "settings.yaml" }
+
+[[example]]
+name = "no false alarms on fixtures and placeholders"
+args = ["scan", "."]
+files = { "tests/fixtures/creds.json" = "{\"token\": \"ghp_R7mK2xQ9vLpW4nT8sYc3BfH6jD1aZ5eU0oGi\"}\n", ".env.example" = "DB_PASSWORD=your-Password-1\n", "app.js" = "const key = \"AKIAIOSFODNN7EXAMPLE\";\nconst password = process.env.DB_PASSWORD;\n" }
+exit = 0
+stdout = ["no secrets found (3 skipped as fixtures or placeholders, --all to show)"]
+not_stdout = ["github-token", "aws-access-key"]
+json = { "/count" = 0, "/skipped" = 3 }
+
+[[example]]
+name = "--all reports fixtures too"
+args = ["scan", ".", "--all"]
+files = { "tests/fixtures/creds.json" = "{\"token\": \"ghp_R7mK2xQ9vLpW4nT8sYc3BfH6jD1aZ5eU0oGi\"}\n" }
+exit = 1
+stdout = ["tests/fixtures/creds.json:1:12", "github-token", "1 secret found"]
+json = { "/count" = 1, "/skipped" = 0, "/findings/0/path" = "tests/fixtures/creds.json" }
+
+[[example]]
+name = "an inline allow marker silences a line"
+args = ["scan", "."]
+files = { "ci.py" = "API_TOKEN = \"ghp_R7mK2xQ9vLpW4nT8sYc3BfH6jD1aZ5eU0oGi\"  # secrets-anything: allow\n" }
+exit = 0
+stdout = ["no secrets found"]
+json = { "/count" = 0 }
+
+[[example]]
+name = "gitignored files are never pushed, so not scanned"
+args = ["scan", "."]
+files = { ".gitignore" = "local.env\n", "local.env" = "API_TOKEN=ghp_R7mK2xQ9vLpW4nT8sYc3BfH6jD1aZ5eU0oGi\n", "README.md" = "# hello\n" }
+exit = 0
+stdout = ["no secrets found"]
+not_stdout = ["local.env"]
+json = { "/count" = 0, "/skipped" = 0 }
+
+# --- check ---
+
+[[example]]
+name = "check finds a token in piped text"
+args = ["check"]
+stdin = "curl -H \"Authorization: Bearer ghp_R7mK2xQ9vLpW4nT8sYc3BfH6jD1aZ5eU0oGi\" https://api.github.com\n"
+exit = 1
+stdout = ["stdin:1:32", "github-token", "ghp_****", "1 secret found"]
+not_stdout = ["R7mK2xQ9vLpW4nT8sYc3"]
+json = { "/count" = 1, "/findings/0/path" = "stdin", "/findings/0/line" = 1, "/findings/0/column" = 32, "/findings/0/rule" = "github-token" }
+
+[[example]]
+name = "check finds a password in a connection url"
+args = ["check", "--name", ".env"]
+stdin = "DATABASE_URL=postgres://admin:S3cr3t-Pa55w0rd@db.internal:5432/app\n"
+exit = 1
+stdout = [".env:1:31", "url-credentials", "S3cr****"]
+not_stdout = ["Pa55w0rd"]
+json = { "/count" = 1, "/findings/0/rule" = "url-credentials", "/findings/0/column" = 31, "/findings/0/secret" = "S3cr****" }
+
+[[example]]
+name = "check uses --name for the fixture rule"
+args = ["check", "--name", "tests/fixtures/sample.json"]
+stdin = "{\"token\": \"ghp_R7mK2xQ9vLpW4nT8sYc3BfH6jD1aZ5eU0oGi\"}\n"
+exit = 0
+stdout = ["no secrets found (1 skipped as fixtures or placeholders, --all to show)"]
+json = { "/count" = 0, "/skipped" = 1 }
+
+[[example]]
+name = "check passes clean text"
+args = ["check"]
+stdin = "const password = process.env.DB_PASSWORD;\nhello world\n"
+exit = 0
+stdout = ["no secrets found"]
+not_stdout = ["skipped"]
+json = { "/count" = 0, "/skipped" = 0, "/findings" = [] }
+
+# --- rules ---
+
+[[example]]
+name = "rules lists every built-in rule"
+args = ["rules"]
+stdout = ["private-key", "aws-access-key", "github-token", "url-credentials", "password-assignment"]
+json = { "/count" = 15, "/rules/0/id" = "private-key", "/rules/3/id" = "github-token", "/rules/14/id" = "password-assignment" }
+
+[[example]]
+name = "rules says what each one catches"
+args = ["rules"]
+stdout = ["stripe-key", "anthropic-key", "jwt"]
+json = { "/rules/7/id" = "stripe-key", "/rules/10/id" = "anthropic-key", "/rules/12/id" = "jwt" }

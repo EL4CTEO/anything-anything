@@ -1,0 +1,12 @@
+{
+  "name": "secrets-anything",
+  "owner": { "name": "EL4CTEO" },
+  "description": "Find leaked API keys, tokens, passwords and private keys in any codebase, in any language, before you push. Fast, offline, no false alarms on test fixtures.",
+  "plugins": [
+    {
+      "name": "secrets-anything",
+      "source": "./",
+      "description": "Find leaked API keys, tokens, passwords and private keys in any codebase, in any language, before you push. Fast, offline, no false alarms on test fixtures."
+    }
+  ]
+}

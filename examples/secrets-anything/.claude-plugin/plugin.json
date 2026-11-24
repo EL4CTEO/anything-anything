@@ -1,0 +1,10 @@
+{
+  "name": "secrets-anything",
+  "version": "0.1.0",
+  "description": "Find leaked API keys, tokens, passwords and private keys in any codebase, in any language, before you push. Fast, offline, no false alarms on test fixtures.",
+  "author": { "name": "EL4CTEO" },
+  "homepage": "https://github.com/EL4CTEO/secrets-anything",
+  "repository": "https://github.com/EL4CTEO/secrets-anything",
+  "license": "MIT",
+  "keywords": ["secrets","security","credentials","api-keys","tokens","leak","pre-commit","scanner","anything-anything","mcp","claude-code"]
+}

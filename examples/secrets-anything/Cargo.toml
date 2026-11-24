@@ -1,0 +1,28 @@
+[package]
+name = "secrets-anything"
+version = "0.1.0"
+edition = "2024"
+description = "Find leaked API keys, tokens, passwords and private keys in any codebase, in any language, before you push. Fast, offline, no false alarms on test fixtures."
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/EL4CTEO/secrets-anything"
+keywords = ["cli", "mcp"]
+categories = ["command-line-utilities"]
+exclude = [".anything", ".github", "docs"]
+
+[[bin]]
+name = "secrets-anything"
+path = "src/main.rs"
+
+[dependencies]
+anyhow = "1.0.105"
+clap = { version = "4.6.9", features = ["derive"] }
+ignore = "0.4.35"
+regex = "1.13.2"
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.154"
+
+[profile.release]
+lto = "fat"
+codegen-units = 1
+strip = true

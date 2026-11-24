@@ -1,0 +1,22 @@
+{
+  "name": "@el4cteo/secrets-anything",
+  "version": "0.1.0",
+  "description": "Find leaked API keys, tokens, passwords and private keys in any codebase, in any language, before you push. Fast, offline, no false alarms on test fixtures.",
+  "keywords": ["secrets","security","credentials","api-keys","tokens","leak","pre-commit","scanner","anything-anything","mcp","claude-code"],
+  "homepage": "https://github.com/EL4CTEO/secrets-anything#readme",
+  "bugs": "https://github.com/EL4CTEO/secrets-anything/issues",
+  "repository": { "type": "git", "url": "git+https://github.com/EL4CTEO/secrets-anything.git" },
+  "license": "MIT",
+  "bin": { "secrets-anything": "bin/secrets-anything.js" },
+  "files": ["bin", "README.md", "LICENSE"],
+  "engines": { "node": ">=20" },
+  "optionalDependencies": {
+    "@el4cteo/secrets-anything-win32-x64": "0.1.0",
+    "@el4cteo/secrets-anything-win32-arm64": "0.1.0",
+    "@el4cteo/secrets-anything-linux-x64": "0.1.0",
+    "@el4cteo/secrets-anything-linux-arm64": "0.1.0",
+    "@el4cteo/secrets-anything-darwin-arm64": "0.1.0",
+    "@el4cteo/secrets-anything-darwin-x64": "0.1.0"
+  },
+  "publishConfig": { "access": "public" }
+}

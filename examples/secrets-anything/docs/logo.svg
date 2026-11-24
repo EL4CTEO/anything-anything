@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="secrets-anything">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ff2f2f"/>
+      <stop offset="1" stop-color="#841616"/>
+    </linearGradient>
+  </defs>
+  <rect x="16" y="16" width="480" height="480" rx="112" fill="url(#bg)"/>
+  <rect x="16" y="16" width="480" height="480" rx="112" fill="none" stroke="#ffffff" stroke-opacity="0.18" stroke-width="4"/>
+  <text x="236" y="352" text-anchor="middle" font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif" font-weight="800" font-size="280" fill="#ffffff">S</text>
+  <path d="M392 96 L404 132 L440 144 L404 156 L392 192 L380 156 L344 144 L380 132 Z" fill="#ffffff" fill-opacity="0.92"/>
+</svg>
