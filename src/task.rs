@@ -30,16 +30,32 @@ latest stable versions of everything."
         }
     }
     let _ = writeln!(md, "\n## What makes a good spec\n");
-    let _ = writeln!(md, "- It does one thing very well, for anything: any language, any file, any input. That's the -anything promise.");
+    let _ = writeln!(
+        md,
+        "- It does one thing very well, for anything: any language, any file, any input. That's the -anything promise."
+    );
     let _ = writeln!(md, "- 1-6 commands with short, obvious names. The main one is what people will type first.");
-    let _ = writeln!(md, "- `notes` says how it works: the approach, the edge cases, what's out of scope. It's the brief for whoever builds it.");
-    let _ = writeln!(md, "- Examples are the proof. At least two per command (CLI) or five in total (web/any): the normal case, an edge case, an error.");
-    let _ = writeln!(md, "  They must be offline and deterministic, and check real behaviour with exact text or json values, not just that something printed.");
-    let _ = writeln!(md, "- `when` finishes the sentence \"Use when...\" for an agent deciding whether to use the tool.");
+    let _ = writeln!(
+        md,
+        "- `notes` says how it works: the approach, the edge cases, what's out of scope. It's the brief for whoever builds it."
+    );
+    let _ = writeln!(
+        md,
+        "- Examples are the proof. At least two per command (CLI) or five in total (web/any): the normal case, an edge case, an error."
+    );
+    let _ = writeln!(
+        md,
+        "  They must be offline and deterministic, and check real behaviour with exact text or json values, not just that something printed."
+    );
+    let _ =
+        writeln!(md, "- `when` finishes the sentence \"Use when...\" for an agent deciding whether to use the tool.");
     let _ = writeln!(md, "- Keep the name: `{name}`. Leave owner, npm and version as they are.\n");
     let _ = writeln!(md, "## Rules\n");
     let _ = writeln!(md, "- Only write `{}`. Don't create any other file.", spec::FILE);
-    let _ = writeln!(md, "- Check it with `anything-anything verify`: its first gate, spec, must pass (the build gates will fail, nothing is built yet).\n");
+    let _ = writeln!(
+        md,
+        "- Check it with `anything-anything verify`: its first gate, spec, must pass (the build gates will fail, nothing is built yet).\n"
+    );
     let _ = writeln!(md, "## The current {}\n\n```toml\n{}\n```\n", spec::FILE, current.trim());
     let _ = writeln!(md, "## The format\n\n{}", spec::REFERENCE);
     md
@@ -72,7 +88,10 @@ pub fn build(spec: &Spec, def: &StackDef, last: Option<&Report>) -> String {
         md.push('\n');
     }
     let _ = writeln!(md, "## Examples it must pass\n");
-    let _ = writeln!(md, "Each runs in a fresh empty folder holding only its `files`. `stdout` items must appear in the output, `json` keys are JSON pointers into the output of the same command with `--json`.\n");
+    let _ = writeln!(
+        md,
+        "Each runs in a fresh empty folder holding only its `files`. `stdout` items must appear in the output, `json` keys are JSON pointers into the output of the same command with `--json`.\n"
+    );
     let _ = writeln!(md, "```toml");
     for e in &spec.examples {
         if let Ok(t) = toml::to_string(&ExampleView(e)) {
@@ -81,19 +100,39 @@ pub fn build(spec: &Spec, def: &StackDef, last: Option<&Report>) -> String {
     }
     let _ = writeln!(md, "```\n");
     if let Ok((_, files)) = stack::files(spec) {
-        let shell: Vec<String> = files.iter().filter(|f| f.owner == Owner::Shell).map(|f| format!("`{}`", f.path)).collect();
+        let shell: Vec<String> =
+            files.iter().filter(|f| f.owner == Owner::Shell).map(|f| format!("`{}`", f.path)).collect();
         let _ = writeln!(md, "## Don't edit\n");
-        let _ = writeln!(md, "`{}` and the files generated from it: {}. They're put back after you finish, and verify fails if they differ.", spec::FILE, shell.join(", "));
-        let _ = writeln!(md, "If the spec itself is wrong (an example can't be right), say so in your final reply instead of working around it.\n");
+        let _ = writeln!(
+            md,
+            "`{}` and the files generated from it: {}. They're put back after you finish, and verify fails if they differ.",
+            spec::FILE,
+            shell.join(", ")
+        );
+        let _ = writeln!(
+            md,
+            "If the spec itself is wrong (an example can't be right), say so in your final reply instead of working around it.\n"
+        );
     }
     let _ = writeln!(md, "## Rules\n");
-    let _ = writeln!(md, "- Build it for real: complete, correct, fast, with clear errors. No stubs, no placeholders, no `{}` left anywhere.", crate::gate::MARKER);
-    let _ = writeln!(md, "- Use the latest stable versions of the language, libraries and tools. Prefer the standard library; add a dependency only when it clearly earns its place.");
+    let _ = writeln!(
+        md,
+        "- Build it for real: complete, correct, fast, with clear errors. No stubs, no placeholders, no `{}` left anywhere.",
+        crate::gate::MARKER
+    );
+    let _ = writeln!(
+        md,
+        "- Use the latest stable versions of the language, libraries and tools. Prefer the standard library; add a dependency only when it clearly earns its place."
+    );
     let _ = writeln!(md, "- Works the same on Windows, macOS and Linux. Print paths with forward slashes.");
     let _ = writeln!(md, "- Offline unless the spec says otherwise. Deterministic output (sorted, stable).");
     let _ = writeln!(md, "- Add your own unit tests for the core logic, next to the stack's.");
-    let _ = writeln!(md, "- Update README.md (concise: what it does, install, usage, one real example) and CHANGELOG.md.");
-    let _ = writeln!(md, "- Run `anything-anything verify` after each piece of work. You're done when every gate passes.\n");
+    let _ =
+        writeln!(md, "- Update README.md (concise: what it does, install, usage, one real example) and CHANGELOG.md.");
+    let _ = writeln!(
+        md,
+        "- Run `anything-anything verify` after each piece of work. You're done when every gate passes.\n"
+    );
     if let Some(r) = last.filter(|r| !r.ok) {
         let _ = writeln!(md, "## What failed last time\n");
         for g in r.gates.iter().filter(|g| g.status == Status::Fail) {

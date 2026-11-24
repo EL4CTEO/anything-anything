@@ -57,7 +57,13 @@ pub fn status(spec: &Spec, st: &State) {
                     Status::Skip => ui::dim(&g.name),
                 })
                 .collect();
-            ui::line(format!("  {} {}  {}/{} examples", ui::dim("last verify:"), gates.join(" "), r.passed(), r.examples.len()));
+            ui::line(format!(
+                "  {} {}  {}/{} examples",
+                ui::dim("last verify:"),
+                gates.join(" "),
+                r.passed(),
+                r.examples.len()
+            ));
         }
         None => ui::line(format!("  {} never", ui::dim("last verify:"))),
     }

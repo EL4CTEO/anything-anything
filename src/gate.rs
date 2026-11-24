@@ -64,7 +64,9 @@ impl Gates {
         match status {
             Status::Pass => ui::ok(format!("{name} {}", ui::dim(util::secs(secs)))),
             Status::Skip => ui::line(format!("{} {name} {}", ui::dim("·"), ui::dim(util::clip(&detail, 90)))),
-            Status::Fail => ui::error(format!("{name}: {}", util::clip(detail.lines().next().unwrap_or_default(), 100))),
+            Status::Fail => {
+                ui::error(format!("{name}: {}", util::clip(detail.lines().next().unwrap_or_default(), 100)))
+            }
         }
         self.0.push(Gate { name: name.into(), status, secs, detail });
     }
@@ -135,7 +137,11 @@ pub fn verify(root: &Path) -> Result<Report> {
             "files",
             Status::Fail,
             t.elapsed().as_secs_f64(),
-            format!("generated from {}, but edited or missing (anything-anything sync puts them back):\n{}", crate::spec::FILE, drift.join("\n")),
+            format!(
+                "generated from {}, but edited or missing (anything-anything sync puts them back):\n{}",
+                crate::spec::FILE,
+                drift.join("\n")
+            ),
         );
     }
 
@@ -166,8 +172,14 @@ pub fn verify(root: &Path) -> Result<Report> {
         match proc::run(root, &argv, &env, timeout, &log) {
             Ok(out) if out.ok || step.fix => g.add(&step.name, Status::Pass, out.secs, ""),
             Ok(out) => {
-                let why = if out.timed_out { format!("timed out after {}s", timeout.as_secs()) } else { "failed".into() };
-                g.add(&step.name, Status::Fail, out.secs, format!("{} {why}:\n{}", argv.join(" "), util::tail(&out.output, 60)));
+                let why =
+                    if out.timed_out { format!("timed out after {}s", timeout.as_secs()) } else { "failed".into() };
+                g.add(
+                    &step.name,
+                    Status::Fail,
+                    out.secs,
+                    format!("{} {why}:\n{}", argv.join(" "), util::tail(&out.output, 60)),
+                );
                 if !step.soft {
                     blocked = Some(step.name.clone());
                 }
@@ -205,7 +217,12 @@ pub fn verify(root: &Path) -> Result<Report> {
             if e.ok {
                 ui::detail(format!("{} {}", ui::green("✓"), e.name));
             } else {
-                ui::detail(format!("{} {}: {}", ui::red("✗"), e.name, util::clip(e.problem.lines().next().unwrap_or_default(), 80)));
+                ui::detail(format!(
+                    "{} {}: {}",
+                    ui::red("✗"),
+                    e.name,
+                    util::clip(e.problem.lines().next().unwrap_or_default(), 80)
+                ));
             }
         }
         let failed: Vec<String> = examples
@@ -215,7 +232,12 @@ pub fn verify(root: &Path) -> Result<Report> {
             .collect();
         let passed = examples.len() - failed.len();
         let status = if failed.is_empty() { Status::Pass } else { Status::Fail };
-        g.add("examples", status, t.elapsed().as_secs_f64(), format!("{passed}/{} pass\n{}", examples.len(), failed.join("\n")));
+        g.add(
+            "examples",
+            status,
+            t.elapsed().as_secs_f64(),
+            format!("{passed}/{} pass\n{}", examples.len(), failed.join("\n")),
+        );
     }
     finish(g, Some(&spec), examples)
 }
@@ -279,11 +301,21 @@ fn mcp_check(root: &Path, spec: &Spec, run: &crate::spec::Run) -> Result<()> {
         Ok(&v["result"])
     };
     let discover = get(1, "server/discover")?;
-    let versions: Vec<&str> = discover["supportedVersions"].as_array().map(|a| a.iter().filter_map(Value::as_str).collect()).unwrap_or_default();
-    anyhow::ensure!(versions.contains(&crate::mcp::LATEST), "server/discover should list {} in supportedVersions, got {versions:?}", crate::mcp::LATEST);
+    let versions: Vec<&str> = discover["supportedVersions"]
+        .as_array()
+        .map(|a| a.iter().filter_map(Value::as_str).collect())
+        .unwrap_or_default();
+    anyhow::ensure!(
+        versions.contains(&crate::mcp::LATEST),
+        "server/discover should list {} in supportedVersions, got {versions:?}",
+        crate::mcp::LATEST
+    );
     get(2, "initialize")?;
     let tools = get(3, "tools/list")?;
-    let got: BTreeSet<String> = tools["tools"].as_array().map(|a| a.iter().filter_map(|t| t["name"].as_str().map(String::from)).collect()).unwrap_or_default();
+    let got: BTreeSet<String> = tools["tools"]
+        .as_array()
+        .map(|a| a.iter().filter_map(|t| t["name"].as_str().map(String::from)).collect())
+        .unwrap_or_default();
     let want: BTreeSet<String> = spec.commands.iter().map(|c| spec.tool(c)).collect();
     anyhow::ensure!(got == want, "tools/list should list {want:?}, got {got:?}");
     Ok(())

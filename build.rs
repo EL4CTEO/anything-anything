@@ -24,8 +24,10 @@ fn main() {
     let mut code = String::from("pub static TEMPLATES: &[(&str, &str)] = &[\n");
     for file in files {
         let rel = file.strip_prefix(root).expect("under templates").to_string_lossy().replace('\\', "/");
-        let _ = writeln!(code, "    ({rel:?}, include_str!(concat!(env!(\"CARGO_MANIFEST_DIR\"), \"/templates/{rel}\"))),");
+        let _ =
+            writeln!(code, "    ({rel:?}, include_str!(concat!(env!(\"CARGO_MANIFEST_DIR\"), \"/templates/{rel}\"))),");
     }
     code.push_str("];\n");
-    fs::write(Path::new(&env::var("OUT_DIR").expect("OUT_DIR")).join("templates.rs"), code).expect("write templates.rs");
+    fs::write(Path::new(&env::var("OUT_DIR").expect("OUT_DIR")).join("templates.rs"), code)
+        .expect("write templates.rs");
 }

@@ -1,0 +1,53 @@
+{
+  "name": "@el4cteo/anything-anything",
+  "version": "0.1.0",
+  "description": "anything-anything. Literally anything. Describe a tool, app or game in a line: your coding agent builds it in any stack (Rust, Python, TypeScript, web, or anything else) and its own tests prove it works.",
+  "keywords": [
+    "anything",
+    "generator",
+    "scaffolding",
+    "ai-agents",
+    "coding-agent",
+    "claude-code",
+    "codex",
+    "mcp",
+    "cli",
+    "rust",
+    "python",
+    "typescript",
+    "vite",
+    "web",
+    "game",
+    "tdd",
+    "verification"
+  ],
+  "homepage": "https://github.com/EL4CTEO/anything-anything#readme",
+  "bugs": "https://github.com/EL4CTEO/anything-anything/issues",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/EL4CTEO/anything-anything.git"
+  },
+  "license": "MIT",
+  "bin": {
+    "anything-anything": "bin/anything-anything.js"
+  },
+  "files": [
+    "bin",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "optionalDependencies": {
+    "@el4cteo/anything-anything-win32-x64": "0.1.0",
+    "@el4cteo/anything-anything-win32-arm64": "0.1.0",
+    "@el4cteo/anything-anything-linux-x64": "0.1.0",
+    "@el4cteo/anything-anything-linux-arm64": "0.1.0",
+    "@el4cteo/anything-anything-darwin-arm64": "0.1.0",
+    "@el4cteo/anything-anything-darwin-x64": "0.1.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

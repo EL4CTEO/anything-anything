@@ -40,16 +40,32 @@ pub fn plan(root: &Path, spec: &Spec, private: bool) -> Result<Vec<Step>> {
     let dirty = git(root, &["status", "--porcelain"]).is_none_or(|s| !s.is_empty());
     if dirty {
         steps.push(step("stage everything", &["git", "add", "-A"]));
-        steps.push(Step { what: "commit".into(), argv: vec!["git".into(), "commit".into(), "-m".into(), format!("{} {tag}", spec.name)] });
+        steps.push(Step {
+            what: "commit".into(),
+            argv: vec!["git".into(), "commit".into(), "-m".into(), format!("{} {tag}", spec.name)],
+        });
     }
     if git(root, &["remote", "get-url", "origin"]).is_none() {
         let visibility = if private { "--private" } else { "--public" };
         steps.push(Step {
             what: format!("create github.com/{repo} and push"),
-            argv: ["gh", "repo", "create", &repo, visibility, "--source", ".", "--remote", "origin", "--push", "--description", &spec.pitch]
-                .iter()
-                .map(|s| s.to_string())
-                .collect(),
+            argv: [
+                "gh",
+                "repo",
+                "create",
+                &repo,
+                visibility,
+                "--source",
+                ".",
+                "--remote",
+                "origin",
+                "--push",
+                "--description",
+                &spec.pitch,
+            ]
+            .iter()
+            .map(|s| s.to_string())
+            .collect(),
         });
     } else {
         steps.push(step("push", &["git", "push", "-u", "origin", "HEAD"]));
@@ -66,7 +82,10 @@ pub fn plan(root: &Path, spec: &Spec, private: bool) -> Result<Vec<Step>> {
     if git(root, &["rev-parse", "-q", "--verify", &format!("refs/tags/{tag}")]).is_none() {
         steps.push(step(&format!("tag {tag}"), &["git", "tag", &tag]));
     }
-    steps.push(Step { what: format!("push {tag}: the release workflow builds and publishes it"), argv: vec!["git".into(), "push".into(), "origin".into(), tag] });
+    steps.push(Step {
+        what: format!("push {tag}: the release workflow builds and publishes it"),
+        argv: vec!["git".into(), "push".into(), "origin".into(), tag],
+    });
     Ok(steps)
 }
 
@@ -91,12 +110,15 @@ pub fn run(root: &Path, yes: bool, private: bool) -> Result<()> {
     }
     for s in &steps {
         ui::step(&s.what);
-        let status = util::command(&s.argv).current_dir(root).status().with_context(|| format!("couldn't run {}", s.argv[0]))?;
+        let status =
+            util::command(&s.argv).current_dir(root).status().with_context(|| format!("couldn't run {}", s.argv[0]))?;
         if !status.success() {
             bail!("{} failed ({status})", s.argv.join(" "));
         }
     }
     ui::ok(format!("https://github.com/{}/{}", spec.owner, spec.name));
-    ui::line(ui::dim("  npm / crates.io / PyPI publishing runs in the release workflow once the repo has the tokens it names."));
+    ui::line(ui::dim(
+        "  npm / crates.io / PyPI publishing runs in the release workflow once the repo has the tokens it names.",
+    ));
     Ok(())
 }

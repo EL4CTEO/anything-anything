@@ -113,7 +113,12 @@ pub fn tools(spec: &Spec) -> Vec<Value> {
 
 fn instructions(spec: &Spec) -> String {
     let names: Vec<String> = spec.commands.iter().map(|c| spec.tool(c)).collect();
-    format!("{}: {} Tools: {}. Every tool returns text for people and, where it has data, structured content.", spec.name, spec.pitch, names.join(", "))
+    format!(
+        "{}: {} Tools: {}. Every tool returns text for people and, where it has data, structured content.",
+        spec.name,
+        spec.pitch,
+        names.join(", ")
+    )
 }
 
 fn manifest(spec: &Spec) -> Value {
@@ -172,6 +177,9 @@ pub fn slots(spec: &Spec, meta: &Meta, def: &StackDef, mut c: Ctx) -> Result<Ctx
     if def.codegen == "rust" {
         rust(spec, &mut c, &tools_json);
     }
+    if def.codegen == "typescript" {
+        typescript(spec, &mut c);
+    }
     Ok(c)
 }
 
@@ -179,7 +187,14 @@ pub fn slots(spec: &Spec, meta: &Meta, def: &StackDef, mut c: Ctx) -> Result<Ctx
 pub fn command_slots(spec: &Spec, cmd: &Command, c: &mut Ctx) {
     let mut args = String::new();
     for a in &cmd.args {
-        let _ = writeln!(args, "  - `{}` ({}{}): {}", a.key(), a.kind.json_type(), if a.required { ", required" } else { "" }, a.help);
+        let _ = writeln!(
+            args,
+            "  - `{}` ({}{}): {}",
+            a.key(),
+            a.kind.json_type(),
+            if a.required { ", required" } else { "" },
+            a.help
+        );
     }
     c.insert("command".into(), cmd.name.clone());
     c.insert("command_module".into(), cmd.module());
@@ -216,7 +231,12 @@ fn rust_default(a: &Arg) -> Option<String> {
             Some(format!("{v:?}"))
         }
         Kind::List => {
-            let items: Vec<String> = d.split(',').map(str::trim).filter(|s| !s.is_empty()).map(|s| format!("{}.to_string()", rust_lit(s))).collect();
+            let items: Vec<String> = d
+                .split(',')
+                .map(str::trim)
+                .filter(|s| !s.is_empty())
+                .map(|s| format!("{}.to_string()", rust_lit(s)))
+                .collect();
             (!items.is_empty()).then(|| format!("vec![{}]", items.join(", ")))
         }
         _ => None,
@@ -246,10 +266,19 @@ fn rust(spec: &Spec, c: &mut Ctx, tools_json: &str) {
     for cmd in &spec.commands {
         let p = names::pascal(&cmd.name);
         let m = cmd.module();
-        let _ = writeln!(variants, "    /// {}\n    #[command(name = {})]\n    {p}(commands::args::{p}Args),", cmd.about, rust_lit(&cmd.name));
+        let _ = writeln!(
+            variants,
+            "    /// {}\n    #[command(name = {})]\n    {p}(commands::args::{p}Args),",
+            cmd.about,
+            rust_lit(&cmd.name)
+        );
         let _ = writeln!(dispatch, "        Cmd::{p}(args) => commands::{m}::run(&args),");
         let _ = writeln!(mods, "pub mod {m};");
-        let _ = writeln!(calls, "        {} => call::<commands::args::{p}Args>(arguments, commands::{m}::run),", rust_lit(&spec.tool(cmd)));
+        let _ = writeln!(
+            calls,
+            "        {} => call::<commands::args::{p}Args>(arguments, commands::{m}::run),",
+            rust_lit(&spec.tool(cmd))
+        );
         let defaults: Vec<(String, Option<String>)> = cmd.args.iter().map(|a| (a.key(), rust_default(a))).collect();
         let derive_default = defaults.iter().all(|(_, d)| d.is_none());
         let _ = writeln!(args, "/// `{}`: {}", synopsis(spec, cmd), cmd.about);
@@ -272,7 +301,8 @@ fn rust(spec: &Spec, c: &mut Ctx, tools_json: &str) {
         if !derive_default {
             let _ = writeln!(args, "impl Default for {p}Args {{\n    fn default() -> Self {{\n        {p}Args {{");
             for (key, d) in &defaults {
-                let _ = writeln!(args, "            {key}: {},", d.clone().unwrap_or_else(|| "Default::default()".into()));
+                let _ =
+                    writeln!(args, "            {key}: {},", d.clone().unwrap_or_else(|| "Default::default()".into()));
             }
             args.push_str("        }\n    }\n}\n\n");
         }
@@ -286,6 +316,40 @@ fn rust(spec: &Spec, c: &mut Ctx, tools_json: &str) {
     c.insert("rust_tools".into(), rust_raw(tools_json));
     c.insert("rust_tool_names".into(), names.join(", "));
     c.insert("rust_instructions".into(), rust_lit(&instructions(spec)));
+}
+
+// ---- typescript ----
+
+fn ts_type(a: &Arg) -> &'static str {
+    match a.kind {
+        Kind::String | Kind::Path => "string",
+        Kind::Int | Kind::Float => "number",
+        Kind::Bool => "boolean",
+        Kind::List => "string[]",
+    }
+}
+
+fn typescript(spec: &Spec, c: &mut Ctx) {
+    let (mut types, mut imports, mut registry) = (String::new(), String::new(), String::new());
+    for cmd in &spec.commands {
+        let p = names::pascal(&cmd.name);
+        let m = cmd.module();
+        let _ = writeln!(types, "/** `{}`: {} */\nexport type {p}Args = {{", synopsis(spec, cmd), cmd.about);
+        for a in &cmd.args {
+            let optional = !a.required && a.default.is_none() && !matches!(a.kind, Kind::Bool | Kind::List);
+            if !a.help.is_empty() {
+                let _ = writeln!(types, "  /** {} */", a.help.replace("*/", "* /"));
+            }
+            let _ = writeln!(types, "  {}{}: {};", a.key(), if optional { "?" } else { "" }, ts_type(a));
+        }
+        types.push_str("};\n\n");
+        let _ = writeln!(imports, "import * as {m} from \"./{m}.ts\";");
+        let _ = writeln!(imports, "import type {{ {p}Args }} from \"./args.ts\";");
+        let _ = writeln!(registry, "  {m}: (args) => {m}.run(args as {p}Args),");
+    }
+    c.insert("ts_args".into(), types.trim_end().to_string());
+    c.insert("ts_imports".into(), imports.trim_end().to_string());
+    c.insert("ts_registry".into(), registry.trim_end().to_string());
 }
 
 #[cfg(test)]

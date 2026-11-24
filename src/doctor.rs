@@ -11,7 +11,8 @@ fn row(ok: bool, name: &str, note: &str) {
 fn version(argv: &[&str]) -> Option<String> {
     let path = util::which(argv[0])?;
     let out = std::process::Command::new(path).args(&argv[1..]).output().ok()?;
-    let text = String::from_utf8_lossy(if out.stdout.is_empty() { &out.stderr } else { &out.stdout }).trim().to_string();
+    let text =
+        String::from_utf8_lossy(if out.stdout.is_empty() { &out.stderr } else { &out.stdout }).trim().to_string();
     out.status.success().then(|| text.lines().next().unwrap_or_default().to_string())
 }
 

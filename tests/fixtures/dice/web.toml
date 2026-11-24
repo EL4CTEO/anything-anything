@@ -1,0 +1,19 @@
+name = "dice-anything"
+pitch = "Roll any dice, in the browser."
+stack = "web"
+owner = "someone"
+
+[[example]]
+name = "the page loads"
+http = "GET /"
+stdout = ["<title>Dice Anything</title>", "id=\"app\""]
+
+[[example]]
+name = "the icon is served"
+http = "GET /logo.svg"
+stdout = ["<svg"]
+
+[[example]]
+name = "the logic tests pass"
+sh = "node --test {root}/test/app.test.ts"
+stdout = ["pass 2"]

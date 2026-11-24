@@ -27,7 +27,12 @@ fn tools() -> Value {
     };
     json!([
         tool("anything_stacks", "The stacks a tool can be built on, with what each is for.", json!({}), json!([])),
-        tool("anything_spec_format", "The anything.toml reference: every field, with examples. Read it before writing a spec.", json!({}), json!([])),
+        tool(
+            "anything_spec_format",
+            "The anything.toml reference: every field, with examples. Read it before writing a spec.",
+            json!({}),
+            json!([])
+        ),
         tool(
             "anything_create",
             "Create a new tool folder from a spec (TOML text) or from an idea and a stack, with every generated file in place. Returns the build task.",
@@ -38,10 +43,30 @@ fn tools() -> Value {
                     "dir": { "type": "string", "description": "The folder to create it in (default: ./<name>)" } }),
             json!(["name"])
         ),
-        tool("anything_task", "What's left to build, as a task: the commands, the examples to pass, what failed last time.", json!({ "path": path }), json!([])),
-        tool("anything_sync", "Regenerate the files anything-anything owns from anything.toml (after editing the spec). Never touches your code.", json!({ "path": path }), json!([])),
-        tool("anything_verify", "Run every gate: spec, generated files, stubs, the stack's steps, MCP, examples. Returns what failed and why.", json!({ "path": path }), json!([])),
-        tool("anything_status", "The spec, the last verify and every build so far.", json!({ "path": path }), json!([])),
+        tool(
+            "anything_task",
+            "What's left to build, as a task: the commands, the examples to pass, what failed last time.",
+            json!({ "path": path }),
+            json!([])
+        ),
+        tool(
+            "anything_sync",
+            "Regenerate the files anything-anything owns from anything.toml (after editing the spec). Never touches your code.",
+            json!({ "path": path }),
+            json!([])
+        ),
+        tool(
+            "anything_verify",
+            "Run every gate: spec, generated files, stubs, the stack's steps, MCP, examples. Returns what failed and why.",
+            json!({ "path": path }),
+            json!([])
+        ),
+        tool(
+            "anything_status",
+            "The spec, the last verify and every build so far.",
+            json!({ "path": path }),
+            json!([])
+        ),
         tool(
             "anything_hub",
             "The most-starred -anything tools on GitHub, or a search.",
@@ -57,7 +82,9 @@ fn root(args: &Value) -> PathBuf {
 
 fn call(name: &str, args: &Value) -> Result<Value> {
     Ok(match name {
-        "anything_stacks" => json!(stack::all().into_iter().map(|(id, about)| json!({ "id": id, "about": about })).collect::<Vec<_>>()),
+        "anything_stacks" => {
+            json!(stack::all().into_iter().map(|(id, about)| json!({ "id": id, "about": about })).collect::<Vec<_>>())
+        }
         "anything_spec_format" => json!({ "format": spec::REFERENCE }),
         "anything_create" => {
             let what = args["name"].as_str().context("name is required")?;
@@ -114,7 +141,11 @@ fn call(name: &str, args: &Value) -> Result<Value> {
                     "examples": spec.examples.len(), "last_verify": s.last, "runs": s.runs })
         }
         "anything_hub" => {
-            let l = hub::list(args["query"].as_str().unwrap_or_default(), args["limit"].as_u64().unwrap_or(20) as usize, false);
+            let l = hub::list(
+                args["query"].as_str().unwrap_or_default(),
+                args["limit"].as_u64().unwrap_or(20) as usize,
+                false,
+            );
             json!({ "tools": l.tools, "offline_list_from": l.offline })
         }
         other => anyhow::bail!("unknown tool {other}"),
@@ -143,7 +174,12 @@ pub fn handle(msg: &Value) -> Option<Value> {
     if let Some(v) = params["_meta"][VERSION_KEY].as_str()
         && !SUPPORTED.contains(&v)
     {
-        return Some(error(id, -32022, "Unsupported protocol version", Some(json!({ "supported": SUPPORTED, "requested": v }))));
+        return Some(error(
+            id,
+            -32022,
+            "Unsupported protocol version",
+            Some(json!({ "supported": SUPPORTED, "requested": v })),
+        ));
     }
     let result = match msg["method"].as_str().unwrap_or_default() {
         "server/discover" => json!({
@@ -184,12 +220,18 @@ pub fn handle(msg: &Value) -> Option<Value> {
             ui::set_progress(None);
             match result {
                 Ok(v) => {
-                    let text = v.get("task").and_then(Value::as_str).map(String::from).unwrap_or_else(|| serde_json::to_string_pretty(&v).unwrap_or_default());
+                    let text = v
+                        .get("task")
+                        .and_then(Value::as_str)
+                        .map(String::from)
+                        .unwrap_or_else(|| serde_json::to_string_pretty(&v).unwrap_or_default());
                     let mut r = json!({ "resultType": "complete", "content": [{ "type": "text", "text": text }], "isError": false });
                     r["structuredContent"] = v;
                     r
                 }
-                Err(e) => json!({ "resultType": "complete", "content": [{ "type": "text", "text": format!("{e:#}") }], "isError": true }),
+                Err(e) => {
+                    json!({ "resultType": "complete", "content": [{ "type": "text", "text": format!("{e:#}") }], "isError": true })
+                }
             }
         }
         method => return Some(error(id, -32601, &format!("unknown method {method}"), None)),
@@ -235,7 +277,10 @@ mod tests {
         assert!(handle(&json!({ "jsonrpc": "2.0", "method": "notifications/initialized" })).is_none());
         let bad = handle(&json!({ "jsonrpc": "2.0", "id": 5, "method": "tools/call", "params": { "name": "anything_status", "arguments": { "path": "/definitely/not/here" } } })).unwrap();
         assert_eq!(bad["result"]["isError"], true);
-        let spec = handle(&json!({ "jsonrpc": "2.0", "id": 6, "method": "tools/call", "params": { "name": "anything_spec_format" } })).unwrap();
+        let spec = handle(
+            &json!({ "jsonrpc": "2.0", "id": 6, "method": "tools/call", "params": { "name": "anything_spec_format" } }),
+        )
+        .unwrap();
         assert!(spec["result"]["content"][0]["text"].as_str().unwrap().contains("[[example]]"));
     }
 }

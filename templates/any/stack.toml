@@ -1,0 +1,13 @@
+about = "Anything else: any language, engine or runtime. The design picks it and writes the [[step]]s and [run] that build, test and run it"
+kind = "any"
+include = ["_base"]
+sources = ["."]
+install = "see README.md"
+brief = """
+This tool's stack is whatever anything.toml's notes, [[step]]s and [run] say: build it with exactly those, at their latest
+stable versions. Lay the project out the way that ecosystem expects (its usual manifest, folders, test runner).
+
+- Everything except anything.toml is yours.
+- The [[step]]s are the gates: each must exit 0. The examples run against [run].
+- Write a README.md that says what it is, how to install it and how to use it.
+"""

@@ -1,0 +1,20 @@
+{
+  "name": "anything-anything",
+  "version": "0.1.0",
+  "description": "anything-anything. Literally anything. Describe a tool, app or game in a line: your coding agent builds it in any stack (Rust, Python, TypeScript, web, or anything else) and its own tests prove it works.",
+  "author": {
+    "name": "EL4CTEO"
+  },
+  "homepage": "https://github.com/EL4CTEO/anything-anything",
+  "repository": "https://github.com/EL4CTEO/anything-anything",
+  "license": "MIT",
+  "keywords": [
+    "generator",
+    "scaffolding",
+    "mcp",
+    "cli",
+    "web",
+    "game",
+    "verification"
+  ]
+}

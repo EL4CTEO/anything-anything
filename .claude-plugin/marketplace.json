@@ -1,0 +1,14 @@
+{
+  "name": "anything-anything",
+  "owner": {
+    "name": "EL4CTEO"
+  },
+  "description": "anything-anything. Literally anything.",
+  "plugins": [
+    {
+      "name": "anything-anything",
+      "source": "./",
+      "description": "anything-anything. Literally anything. Describe a tool, app or game in a line: your coding agent builds it in any stack (Rust, Python, TypeScript, web, or anything else) and its own tests prove it works."
+    }
+  ]
+}

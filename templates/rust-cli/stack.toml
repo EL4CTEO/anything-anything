@@ -35,11 +35,13 @@ fix = true
 [[step]]
 name = "build"
 run = ["cargo", "build", "--all-targets"]
+env = { CARGO_TARGET_DIR = "{root}/target" }
 timeout = 1800
 
 [[step]]
 name = "lint"
 run = ["cargo", "clippy", "--all-targets", "--", "-D", "warnings"]
+env = { CARGO_TARGET_DIR = "{root}/target" }
 probe = ["cargo", "clippy", "--version"]
 soft = true
 timeout = 1800
@@ -47,4 +49,5 @@ timeout = 1800
 [[step]]
 name = "test"
 run = ["cargo", "test"]
+env = { CARGO_TARGET_DIR = "{root}/target" }
 timeout = 1800

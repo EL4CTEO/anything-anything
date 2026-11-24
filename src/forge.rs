@@ -92,8 +92,16 @@ pub fn create(cwd: &Path, o: NewOpts) -> Result<(PathBuf, Option<Report>)> {
     }
     if let Some(s) = &o.stack {
         stack::all().iter().find(|(id, _)| id == s).with_context(|| {
-            format!("no stack {s:?}; there's {}", stack::all().into_iter().map(|(id, _)| id).collect::<Vec<_>>().join(", "))
+            format!(
+                "no stack {s:?}; there's {}",
+                stack::all().into_iter().map(|(id, _)| id).collect::<Vec<_>>().join(", ")
+            )
         })?;
+    }
+    if let Some(file) = &o.spec {
+        let given =
+            Spec::parse(&std::fs::read_to_string(file).with_context(|| format!("reading {}", file.display()))?)?;
+        stack::load(&given)?;
     }
     std::fs::create_dir_all(&root)?;
     let owner = o.owner.clone().or_else(github_login).unwrap_or_default();
@@ -101,7 +109,11 @@ pub fn create(cwd: &Path, o: NewOpts) -> Result<(PathBuf, Option<Report>)> {
         Some(file) => std::fs::read_to_string(file).with_context(|| format!("reading {}", file.display()))?,
         None => {
             let stack = o.stack.clone().unwrap_or_else(|| "any".into());
-            let idea = if o.idea.trim().is_empty() { format!("{} anything.", names::pascal(name.trim_end_matches("-anything"))) } else { o.idea.clone() };
+            let idea = if o.idea.trim().is_empty() {
+                format!("{} anything.", names::pascal(name.trim_end_matches("-anything")))
+            } else {
+                o.idea.clone()
+            };
             starter(&name, &idea, &stack, &owner, o.npm.as_deref(), o.color.as_deref())
         }
     };
@@ -134,7 +146,12 @@ pub fn create(cwd: &Path, o: NewOpts) -> Result<(PathBuf, Option<Report>)> {
 /// An idea becomes anything.toml: the agent writes it, anything-anything checks it, until it's valid.
 pub fn design(root: &Path, idea: &str, stack_choice: Option<&str>, a: &AgentOpts) -> Result<Spec> {
     let before = Spec::load(root)?;
-    let pinned = [("name", before.name.clone()), ("owner", before.owner.clone()), ("version", before.version.clone()), ("npm", before.npm.clone())];
+    let pinned = [
+        ("name", before.name.clone()),
+        ("owner", before.owner.clone()),
+        ("version", before.version.clone()),
+        ("npm", before.npm.clone()),
+    ];
     let idea = if idea.trim().is_empty() { before.pitch.clone() } else { idea.to_string() };
     let mut feedback = String::new();
     for attempt in 1..=a.attempts.max(1) {
@@ -142,16 +159,28 @@ pub fn design(root: &Path, idea: &str, stack_choice: Option<&str>, a: &AgentOpts
         let md = format!("{}{feedback}", task::design(&before.name, &idea, stack_choice, &current));
         std::fs::create_dir_all(state::dir(root))?;
         std::fs::write(state::dir(root).join("DESIGN.md"), md)?;
-        ui::step(format!("{} is designing {}{}", a.agent, before.name, if attempt > 1 { format!(" (attempt {attempt})") } else { String::new() }));
+        ui::step(format!(
+            "{} is designing {}{}",
+            a.agent,
+            before.name,
+            if attempt > 1 { format!(" (attempt {attempt})") } else { String::new() }
+        ));
         let start = Instant::now();
-        agent::run(&a.agent, root, "Read .anything/DESIGN.md in this folder and do what it says.", &state::logs(root).join(format!("design-{attempt}.log")), a.timeout)?;
+        agent::run(
+            &a.agent,
+            root,
+            "Read .anything/DESIGN.md in this folder and do what it says.",
+            &state::logs(root).join(format!("design-{attempt}.log")),
+            a.timeout,
+        )?;
         // a design writes one file
         for rel in util::files_under(root) {
             if rel != spec::FILE {
                 let _ = std::fs::remove_file(root.join(&rel));
             }
         }
-        let keys: Vec<(&str, &str)> = pinned.iter().filter(|(_, v)| !v.is_empty()).map(|(k, v)| (*k, v.as_str())).collect();
+        let keys: Vec<(&str, &str)> =
+            pinned.iter().filter(|(_, v)| !v.is_empty()).map(|(k, v)| (*k, v.as_str())).collect();
         let problems = match Spec::load(root) {
             Err(e) => vec![format!("{e:#}")],
             Ok(_) => {
@@ -164,18 +193,42 @@ pub fn design(root: &Path, idea: &str, stack_choice: Option<&str>, a: &AgentOpts
             }
         };
         let ok = problems.is_empty();
-        state::record(root, RunRec { at: util::now(), kind: "design".into(), agent: a.agent.clone(), attempt, ok, secs: start.elapsed().as_secs_f64(), note: problems.join("; ") })?;
+        state::record(
+            root,
+            RunRec {
+                at: util::now(),
+                kind: "design".into(),
+                agent: a.agent.clone(),
+                attempt,
+                ok,
+                secs: start.elapsed().as_secs_f64(),
+                note: problems.join("; "),
+            },
+        )?;
         if ok {
             let spec = Spec::load(root)?;
-            ui::ok(format!("designed: {} stack, {} commands, {} examples", spec.stack, spec.commands.len(), spec.examples.len()));
+            ui::ok(format!(
+                "designed: {} stack, {} commands, {} examples",
+                spec.stack,
+                spec.commands.len(),
+                spec.examples.len()
+            ));
             return Ok(spec);
         }
         for p in &problems {
             ui::warn(p);
         }
-        feedback = format!("\n\n## Your last version had problems\n\nFix these in {}:\n\n- {}\n", spec::FILE, problems.join("\n- "));
+        feedback = format!(
+            "\n\n## Your last version had problems\n\nFix these in {}:\n\n- {}\n",
+            spec::FILE,
+            problems.join("\n- ")
+        );
     }
-    bail!("the design still has problems after {} attempts: fix {} by hand, then run anything-anything build", a.attempts, root.join(spec::FILE).display())
+    bail!(
+        "the design still has problems after {} attempts: fix {} by hand, then run anything-anything build",
+        a.attempts,
+        root.join(spec::FILE).display()
+    )
 }
 
 /// Writes .anything/TASK.md, for an agent run by anything-anything or by you.
@@ -207,16 +260,30 @@ pub fn build(root: &Path, a: &AgentOpts) -> Result<Report> {
     for attempt in 1..=a.attempts.max(1) {
         write_task(root, &notes)?;
         notes.clear();
-        ui::step(format!("{} is building {}{}", a.agent, spec.name, if attempt > 1 { format!(" (attempt {attempt}/{})", a.attempts) } else { String::new() }));
+        ui::step(format!(
+            "{} is building {}{}",
+            a.agent,
+            spec.name,
+            if attempt > 1 { format!(" (attempt {attempt}/{})", a.attempts) } else { String::new() }
+        ));
         let start = Instant::now();
-        let ran = agent::run(&a.agent, root, "Read .anything/TASK.md in this folder and do what it says.", &state::logs(root).join(format!("build-{attempt}.log")), a.timeout);
+        let ran = agent::run(
+            &a.agent,
+            root,
+            "Read .anything/TASK.md in this folder and do what it says.",
+            &state::logs(root).join(format!("build-{attempt}.log")),
+            a.timeout,
+        );
         if std::fs::read_to_string(root.join(spec::FILE))? != spec_text {
             std::fs::write(root.join(spec::FILE), &spec_text)?;
             notes.push(format!("You changed {}; it was put back. If the spec is wrong, say so instead.", spec::FILE));
         }
         let restored = scaffold::sync(root, &spec, false)?;
         if !restored.updated.is_empty() {
-            notes.push(format!("You edited generated files ({}); they were put back. Put your code in the files that are yours.", restored.updated.join(", ")));
+            notes.push(format!(
+                "You edited generated files ({}); they were put back. Put your code in the files that are yours.",
+                restored.updated.join(", ")
+            ));
         }
         for n in &notes {
             ui::warn(n);
@@ -227,7 +294,18 @@ pub fn build(root: &Path, a: &AgentOpts) -> Result<Report> {
         ui::step("verify");
         let r = gate::verify(root)?;
         let failing: Vec<String> = r.failing().map(|g| g.name.clone()).collect();
-        state::record(root, RunRec { at: util::now(), kind: "build".into(), agent: a.agent.clone(), attempt, ok: r.ok, secs: start.elapsed().as_secs_f64(), note: failing.join(", ") })?;
+        state::record(
+            root,
+            RunRec {
+                at: util::now(),
+                kind: "build".into(),
+                agent: a.agent.clone(),
+                attempt,
+                ok: r.ok,
+                secs: start.elapsed().as_secs_f64(),
+                note: failing.join(", "),
+            },
+        )?;
         if r.ok {
             return Ok(r);
         }

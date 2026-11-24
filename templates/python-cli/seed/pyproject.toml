@@ -1,0 +1,31 @@
+[project]
+name = "{{name}}"
+version = "{{version}}"
+description = {{pitch_json}}
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.12"
+dependencies = []
+keywords = {{keywords_json}}
+classifiers = ["Programming Language :: Python :: 3", "Environment :: Console", "Operating System :: OS Independent"]
+
+[project.urls]
+Homepage = "{{repo_url}}"
+Issues = "{{repo_url}}/issues"
+
+[project.scripts]
+{{name}} = "{{snake}}.cli:main"
+
+[build-system]
+requires = ["uv_build>=0.13.9,<0.14"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-name = "{{snake}}"
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B"]

@@ -1,0 +1,18 @@
+name = "shout-anything"
+pitch = "Uppercases anything you pipe in."
+stack = "any"
+owner = "someone"
+notes = "A single Python script, no dependencies."
+
+[run]
+cmd = ["{python}", "{root}/shout.py"]
+
+[[step]]
+name = "test"
+run = ["{python}", "-m", "unittest", "discover", "-s", "tests"]
+
+[[example]]
+name = "shouts stdin"
+args = ["--"]
+stdin = "hello\n"
+stdout = ["HELLO"]

@@ -35,8 +35,7 @@ fn norm(s: &str) -> String {
 }
 
 fn env_of(run: &Run, root: &Path, port: Option<u16>) -> BTreeMap<String, String> {
-    let mut env: BTreeMap<String, String> =
-        run.env.iter().map(|(k, v)| (k.clone(), expand(v, root, port))).collect();
+    let mut env: BTreeMap<String, String> = run.env.iter().map(|(k, v)| (k.clone(), expand(v, root, port))).collect();
     env.insert("ANYTHING_ROOT".into(), util::slashes(root));
     env.insert("NO_COLOR".into(), "1".into());
     if let Some(p) = port {
@@ -54,7 +53,13 @@ fn expand(s: &str, root: &Path, port: Option<u16>) -> String {
 }
 
 /// Runs argv in dir, feeding stdin, killing it after timeout.
-pub fn exec(argv: &[String], dir: &Path, env: &BTreeMap<String, String>, stdin: Option<&str>, timeout: Duration) -> Result<Captured> {
+pub fn exec(
+    argv: &[String],
+    dir: &Path,
+    env: &BTreeMap<String, String>,
+    stdin: Option<&str>,
+    timeout: Duration,
+) -> Result<Captured> {
     let mut child = util::command(argv)
         .current_dir(dir)
         .envs(env)
@@ -100,8 +105,11 @@ struct Sandbox(PathBuf);
 impl Sandbox {
     fn new(e: &Example) -> Result<Sandbox> {
         static N: AtomicUsize = AtomicUsize::new(0);
-        let dir = std::env::temp_dir()
-            .join(format!("anything-example-{}-{}", std::process::id(), N.fetch_add(1, Ordering::Relaxed)));
+        let dir = std::env::temp_dir().join(format!(
+            "anything-example-{}-{}",
+            std::process::id(),
+            N.fetch_add(1, Ordering::Relaxed)
+        ));
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir)?;
         for (rel, text) in &e.files {
@@ -171,7 +179,9 @@ fn same(got: &Value, want: &Value) -> bool {
         (Value::Number(a), Value::Number(b)) => a.as_f64() == b.as_f64(),
         (Value::String(a), Value::String(b)) => norm(a) == norm(b),
         (Value::Array(a), Value::Array(b)) => a.len() == b.len() && a.iter().zip(b).all(|(x, y)| same(x, y)),
-        (Value::Object(a), Value::Object(b)) => a.len() == b.len() && a.iter().all(|(k, v)| b.get(k).is_some_and(|w| same(v, w))),
+        (Value::Object(a), Value::Object(b)) => {
+            a.len() == b.len() && a.iter().all(|(k, v)| b.get(k).is_some_and(|w| same(v, w)))
+        }
         _ => got == want,
     }
 }
@@ -376,7 +386,7 @@ mod tests {
     fn shell_examples_check_output_files_and_json() {
         let root = std::env::temp_dir();
         let run = Run::default();
-        let mut e = example("echo {\"n\": 3}");
+        let mut e = example(if cfg!(windows) { "echo {\"n\": 3}" } else { "echo '{\"n\": 3}'" });
         e.files.insert("in.txt".into(), "hello".into());
         e.stdout = vec!["\"n\"".into()];
         e.json.insert("/n".into(), serde_json::json!(3.0));

@@ -17,8 +17,12 @@ pub fn which(name: &str) -> Option<PathBuf> {
         let p = PathBuf::from(name);
         return p.is_file().then_some(p);
     }
+    // Windows can't run an extensionless file (npm ships a sh script called npm next to npm.cmd)
     let mut exts = vec![String::new()];
     if cfg!(windows) {
+        if Path::new(name).extension().is_none() {
+            exts.clear();
+        }
         let pathext = std::env::var("PATHEXT").unwrap_or_else(|_| ".EXE;.CMD;.BAT;.COM".into());
         exts.extend(pathext.split(';').filter(|s| !s.is_empty()).map(|s| s.to_ascii_lowercase()));
     }
@@ -42,9 +46,7 @@ pub fn first_installed(alternatives: &str) -> Option<String> {
 pub fn command(argv: &[String]) -> Command {
     let shell_line = argv.len() == 1 && argv[0].contains(char::is_whitespace);
     if shell_line {
-        let mut c = if cfg!(windows) { Command::new("cmd") } else { Command::new("sh") };
-        c.arg(if cfg!(windows) { "/C" } else { "-c" }).arg(&argv[0]);
-        return c;
+        return shell(&argv[0]);
     }
     if cfg!(windows) {
         let shim = which(&argv[0])
@@ -59,6 +61,23 @@ pub fn command(argv: &[String]) -> Command {
     let mut c = Command::new(&argv[0]);
     c.args(&argv[1..]);
     c
+}
+
+/// A shell line, run by cmd on Windows (verbatim: /S strips the outer quotes) and sh elsewhere.
+fn shell(line: &str) -> Command {
+    #[cfg(windows)]
+    {
+        use std::os::windows::process::CommandExt;
+        let mut c = Command::new("cmd");
+        c.raw_arg(format!("/D /S /C \"{line}\""));
+        c
+    }
+    #[cfg(not(windows))]
+    {
+        let mut c = Command::new("sh");
+        c.arg("-c").arg(line);
+        c
+    }
 }
 
 /// Kills a process and, on Windows, everything it started.
@@ -76,9 +95,7 @@ pub fn kill_tree(child: &mut Child) {
 
 /// Runtime placeholders in a stack's or spec's commands: {root}, {exe}, {python}.
 pub fn expand(s: &str, root: &Path) -> String {
-    s.replace("{root}", &slashes(root))
-        .replace("{exe}", std::env::consts::EXE_SUFFIX)
-        .replace("{python}", &python())
+    s.replace("{root}", &slashes(root)).replace("{exe}", std::env::consts::EXE_SUFFIX).replace("{python}", &python())
 }
 
 pub fn python() -> String {

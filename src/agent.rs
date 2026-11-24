@@ -20,10 +20,20 @@ Bash(git status:*) Bash(git diff:*) Bash(ls:*) Bash(cat:*) Bash(mkdir:*) Bash(ec
 /// The argv for an --agent value.
 pub fn argv(spec: &str) -> Vec<String> {
     match spec {
-        "claude" => ["claude", "-p", "--output-format", "stream-json", "--verbose", "--permission-mode", "acceptEdits", "--allowedTools", CLAUDE_TOOLS]
-            .iter()
-            .map(|s| s.to_string())
-            .collect(),
+        "claude" => [
+            "claude",
+            "-p",
+            "--output-format",
+            "stream-json",
+            "--verbose",
+            "--permission-mode",
+            "acceptEdits",
+            "--allowedTools",
+            CLAUDE_TOOLS,
+        ]
+        .iter()
+        .map(|s| s.to_string())
+        .collect(),
         "codex" => ["codex", "exec", "--full-auto", "-"].iter().map(|s| s.to_string()).collect(),
         other => other.split_whitespace().map(String::from).collect(),
     }
@@ -65,7 +75,8 @@ pub fn run(spec: &str, dir: &Path, prompt: &str, log_path: &Path, timeout: Durat
     }
     let mut log = File::create(log_path)?;
     // the agent's shell finds this anything-anything first, even when it isn't installed
-    let mut path = std::env::current_exe().ok().and_then(|p| p.parent().map(|d| d.to_path_buf())).into_iter().collect::<Vec<_>>();
+    let mut path =
+        std::env::current_exe().ok().and_then(|p| p.parent().map(|d| d.to_path_buf())).into_iter().collect::<Vec<_>>();
     path.extend(std::env::split_paths(&std::env::var_os("PATH").unwrap_or_default()));
     let mut child = util::command(&argv)
         .current_dir(dir)
@@ -80,7 +91,13 @@ pub fn run(spec: &str, dir: &Path, prompt: &str, log_path: &Path, timeout: Durat
     stdin.write_all(prompt.as_bytes())?;
     drop(stdin);
     let (tx, rx) = std::sync::mpsc::channel::<String>();
-    for pipe in [child.stdout.take().map(|p| Box::new(p) as Box<dyn std::io::Read + Send>), child.stderr.take().map(|p| Box::new(p) as Box<dyn std::io::Read + Send>)].into_iter().flatten() {
+    for pipe in [
+        child.stdout.take().map(|p| Box::new(p) as Box<dyn std::io::Read + Send>),
+        child.stderr.take().map(|p| Box::new(p) as Box<dyn std::io::Read + Send>),
+    ]
+    .into_iter()
+    .flatten()
+    {
         let tx = tx.clone();
         std::thread::spawn(move || {
             for line in BufReader::new(pipe).lines().map_while(Result::ok) {

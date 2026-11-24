@@ -81,7 +81,7 @@ pub struct GenFile {
     pub owner: Owner,
 }
 
-/// Every stack, by id, with what it's for.
+/// Every stack, by id, with what it's for ("cli · A command-line tool...").
 pub fn all() -> Vec<(String, String)> {
     let mut ids = BTreeSet::new();
     for (path, _) in TEMPLATES {
@@ -94,7 +94,7 @@ pub fn all() -> Vec<(String, String)> {
     }
     ids.into_iter()
         .map(|id| {
-            let about = raw_def(&id).map(|d| d.about).unwrap_or_default();
+            let about = raw_def(&id).map(|d| format!("[{}] {}", d.kind, d.about)).unwrap_or_default();
             (id, about)
         })
         .collect()
@@ -234,7 +234,12 @@ required = true
             let (def, files) = files(&spec(&id)).unwrap_or_else(|e| panic!("{id}: {e:#}"));
             assert_eq!(def.id, id);
             assert!(files.iter().any(|f| f.path == "README.md"), "{id} has no README");
-            assert!(files.iter().all(|f| !f.path.contains("__")), "{id}: unrendered path");
+            assert!(
+                files
+                    .iter()
+                    .all(|f| ["__name__", "__verb__", "__snake__", "__command__"].iter().all(|p| !f.path.contains(p))),
+                "{id}: unrendered path"
+            );
             if def.commands {
                 assert!(files.iter().any(|f| f.path.contains("list_all")), "{id}: no command file");
                 assert!(!def.run.cmd.is_empty(), "{id}: a CLI stack needs [run] cmd");

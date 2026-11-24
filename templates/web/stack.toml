@@ -1,0 +1,37 @@
+about = "A web app or game in TypeScript with Vite: runs in any browser, deploys to GitHub Pages"
+kind = "web"
+include = ["_base"]
+sources = ["src"]
+install = "npm install && npm run dev"
+brief = """
+TypeScript (strict, erasable syntax only) and Vite, no framework unless the spec asks for one. Plain DOM, canvas or WebGL.
+
+- `index.html`, `src/` and `public/` are yours. `src/main.ts` starts the app; keep the logic (state, rules, scoring,
+  parsing) in modules that don't touch the DOM, like `src/app.ts`, so tests can run it in Node.
+- `test/` is yours: node:test, files named *.test.ts, importing src modules with their .ts extension.
+- `package.json` is yours: add a dependency only when it clearly earns its place.
+- It must work on a phone and a desktop, with keyboard, mouse and touch where it matters. No network calls unless the spec says.
+- The http examples run against the production build (`vite build`, then `vite preview`).
+- `tsc --noEmit` must pass.
+"""
+
+[run]
+serve = ["npx", "vite", "preview", "--port", "{port}", "--strictPort", "--host", "127.0.0.1"]
+ready = "/"
+
+[[step]]
+name = "install"
+run = ["npm", "install", "--no-audit", "--no-fund", "--loglevel=error"]
+timeout = 900
+
+[[step]]
+name = "typecheck"
+run = ["npx", "tsc", "--noEmit"]
+
+[[step]]
+name = "test"
+run = ["node", "--test", "test/**/*.test.ts"]
+
+[[step]]
+name = "build"
+run = ["npx", "vite", "build"]

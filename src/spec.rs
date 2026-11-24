@@ -331,7 +331,8 @@ impl Spec {
                     let mut parts = e.http.split_whitespace();
                     let method = parts.next().unwrap_or_default();
                     let path = parts.next().unwrap_or_default();
-                    if !matches!(method, "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | "HEAD") || !path.starts_with('/') {
+                    if !matches!(method, "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | "HEAD") || !path.starts_with('/')
+                    {
                         p.push(format!("{label}: http must look like \"GET /path\""));
                     }
                     if !e.files.is_empty() || e.stdin.is_some() || !e.files_after.is_empty() {
@@ -376,8 +377,14 @@ impl Spec {
         let mut seen = BTreeSet::new();
         for c in &self.commands {
             let label = format!("command {:?}", c.name);
-            if !names::kebab_ok(&c.name) || names::reserved(&c.name) || matches!(c.name.as_str(), "mcp" | "help") {
-                p.push(format!("{label}: lower-kebab, not mcp or help, not a keyword in Rust/Python/JS"));
+            if !names::kebab_ok(&c.name)
+                || names::reserved(&c.name)
+                || matches!(
+                    c.name.as_str(),
+                    "mcp" | "help" | "args" | "index" | "output" | "cli" | "main" | "manifest" | "engine"
+                )
+            {
+                p.push(format!("{label}: lower-kebab, not a keyword in Rust/Python/JS, not one of mcp, help, args, index, output, cli, main, manifest, engine"));
             }
             if !seen.insert(c.module()) {
                 p.push(format!("{label} is there twice"));
@@ -393,7 +400,10 @@ impl Spec {
             let positional: Vec<&Arg> = c.args.iter().filter(|a| a.positional).collect();
             for a in &c.args {
                 let at = format!("{label}, arg {:?}", a.name);
-                if !names::kebab_ok(&a.name) || names::reserved(&a.name) || matches!(a.name.as_str(), "json" | "help" | "version") {
+                if !names::kebab_ok(&a.name)
+                    || names::reserved(&a.name)
+                    || matches!(a.name.as_str(), "json" | "help" | "version")
+                {
                     p.push(format!("{at}: lower-kebab, not json/help/version, not a keyword in Rust/Python/JS"));
                 }
                 if !args.insert(a.key()) {
@@ -469,7 +479,9 @@ json = { "/greeting" = "Hello, world!" }
 
     #[test]
     fn problems_are_specific() {
-        let bad = GOOD.replace("args = [\"hello\", \"world\"]", "args = [\"wave\"]").replace("name = \"who\"", "name = \"type\"");
+        let bad = GOOD
+            .replace("args = [\"hello\", \"world\"]", "args = [\"wave\"]")
+            .replace("name = \"who\"", "name = \"type\"");
         let spec = Spec::parse(&bad).unwrap();
         let def = stack::load(&spec).unwrap();
         let p = spec.problems(&def).join("\n");
@@ -482,7 +494,14 @@ json = { "/greeting" = "Hello, world!" }
 
     #[test]
     fn defaults_as_json() {
-        let a = |kind, d: &str| Arg { name: "x".into(), kind, help: String::new(), positional: false, required: false, default: Some(d.into()) };
+        let a = |kind, d: &str| Arg {
+            name: "x".into(),
+            kind,
+            help: String::new(),
+            positional: false,
+            required: false,
+            default: Some(d.into()),
+        };
         assert_eq!(a(Kind::List, "TODO, FIXME").default_json(), serde_json::json!(["TODO", "FIXME"]));
         assert_eq!(a(Kind::Int, "3").default_json(), serde_json::json!(3));
     }

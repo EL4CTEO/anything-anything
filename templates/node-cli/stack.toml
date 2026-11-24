@@ -1,0 +1,42 @@
+about = "A command-line tool in TypeScript for Node 24+ (runs as it is, no build to try it): MCP server built in, on npm"
+kind = "cli"
+codegen = "typescript"
+include = ["_base", "_agent"]
+commands = true
+mcp = true
+install = "npm i -g {{npm}}"
+sources = ["src"]
+brief = """
+TypeScript, run directly by Node 24+ (type stripping: only erasable syntax, so no enums, namespaces or parameter
+properties; import local files with their .ts extension). Packaged as compiled JS in dist/ by `tsc`.
+
+- `src/commands/<command>.ts` is yours, one per command: `export async function run(args: XArgs): Promise<Output>`.
+  Replace the stub. The typed args are in src/commands/args.ts.
+- `src/engine/` is yours: the logic the commands share. Put most of the code here.
+- `test/` is yours: node:test, files named *.test.ts. Test the engine.
+- `package.json` is yours: prefer node: built-ins; add a dependency only when it clearly earns its place.
+- Return `new Output(text, data)`: text for people, data for `--json` and MCP, `.withExit(1)` for "found problems".
+  Never console.log yourself (stdout is the MCP channel); progress goes to stderr. Throw for a failure: the message is shown.
+- Generated (don't edit): main.ts, cli.ts, mcp.ts, output.ts, manifest.json, commands/index.ts, commands/args.ts, bin/.
+- `tsc --noEmit` (strict) must pass.
+"""
+
+[run]
+cmd = ["node", "{root}/src/main.ts"]
+
+[[step]]
+name = "install"
+run = ["npm", "install", "--no-audit", "--no-fund", "--loglevel=error"]
+timeout = 900
+
+[[step]]
+name = "typecheck"
+run = ["npx", "tsc", "--noEmit"]
+
+[[step]]
+name = "test"
+run = ["node", "--test", "test/**/*.test.ts"]
+
+[[step]]
+name = "build"
+run = ["npx", "tsc", "-p", "tsconfig.build.json"]

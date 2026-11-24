@@ -1,0 +1,26 @@
+{
+  "name": "{{npm}}",
+  "version": "{{version}}",
+  "description": {{pitch_json}},
+  "keywords": {{keywords_json}},
+  "homepage": "{{repo_url}}#readme",
+  "bugs": "{{repo_url}}/issues",
+  "repository": { "type": "git", "url": "git+{{repo_url}}.git" },
+  "license": "MIT",
+  "type": "module",
+  "bin": { "{{name}}": "bin/{{name}}.js" },
+  "files": ["bin", "dist", "README.md", "LICENSE"],
+  "engines": { "node": ">=24" },
+  "scripts": {
+    "start": "node src/main.ts",
+    "test": "node --test \"test/**/*.test.ts\"",
+    "typecheck": "tsc --noEmit",
+    "build": "tsc -p tsconfig.build.json",
+    "prepack": "npm run build"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "typescript": "^7.0.2"
+  },
+  "publishConfig": { "access": "public" }
+}

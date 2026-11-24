@@ -1,0 +1,40 @@
+about = "A command-line tool in Python 3.12+ (typed, standard library only to start): MCP server built in, on PyPI"
+kind = "cli"
+include = ["_base", "_agent"]
+commands = true
+mcp = true
+install = "uv tool install {{name}}   # or: pipx install {{name}}"
+stubs = ["raise NotImplementedError"]
+sources = ["src"]
+brief = """
+Python 3.12+, typed (PEP 604 unions, dataclasses), packaged with uv_build.
+
+- `src/{{snake}}/commands/<command>.py` is yours, one per command: `def run(args) -> Output`. Replace the stub.
+  `args` has one attribute per argument (snake_case), already converted and defaulted.
+- `src/{{snake}}/engine/` is yours: the logic the commands share. Put most of the code here.
+- `tests/` is yours: unittest, discovered from tests/test_*.py. Test the engine.
+- `pyproject.toml` is yours: add dependencies only when the standard library really can't do it.
+- Return `Output(text, data)`: text for people, data (JSON-able) for `--json` and MCP, `exit=1` for "found problems".
+  Never print to stdout yourself (it's the MCP channel); progress goes to stderr. Raise an exception for a failure: the message is shown.
+- Generated (don't edit): cli.py, mcp.py, output.py, manifest.json, __init__.py, __main__.py, commands/__init__.py.
+- The code must pass `ruff check` (the config is in pyproject.toml).
+"""
+
+[run]
+cmd = ["{python}", "-m", "{{snake}}"]
+env = { PYTHONPATH = "{root}/src", PYTHONUTF8 = "1" }
+
+[[step]]
+name = "compile"
+run = ["{python}", "-m", "compileall", "-q", "src", "tests"]
+
+[[step]]
+name = "lint"
+run = ["uvx", "ruff", "check", "."]
+probe = ["uvx", "--version"]
+soft = true
+
+[[step]]
+name = "test"
+run = ["{python}", "-m", "unittest", "discover", "-s", "tests", "-t", "."]
+env = { PYTHONPATH = "{root}/src", PYTHONUTF8 = "1" }

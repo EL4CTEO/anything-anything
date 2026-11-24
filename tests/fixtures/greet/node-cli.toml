@@ -1,0 +1,65 @@
+name = "greet-anything"
+pitch = "Greets anyone, and counts the lines of anything."
+stack = "node-cli"
+owner = "someone"
+notes = "hello greets; count adds up the lines of the given files."
+
+[[command]]
+name = "hello"
+about = "Say hello"
+[[command.arg]]
+name = "who"
+kind = "string"
+positional = true
+default = "world"
+help = "Who to greet"
+[[command.arg]]
+name = "shout"
+kind = "bool"
+help = "In capitals"
+
+[[command]]
+name = "count-lines"
+about = "Count the lines of files"
+[[command.arg]]
+name = "files"
+kind = "list"
+positional = true
+required = true
+help = "The files"
+[[command.arg]]
+name = "min"
+kind = "int"
+default = "0"
+help = "Only files with at least this many lines"
+
+[[example]]
+name = "hello world"
+args = ["hello"]
+stdout = ["Hello, world!"]
+json = { "/greeting" = "Hello, world!" }
+
+[[example]]
+name = "shouting"
+args = ["hello", "Ada", "--shout"]
+stdout = ["HELLO, ADA!"]
+
+[[example]]
+name = "counts lines"
+args = ["count-lines", "a.txt", "sub/b.txt"]
+files = { "a.txt" = "1\n2\n3\n", "sub/b.txt" = "x\n" }
+stdout = ["a.txt: 3", "sub/b.txt: 1", "total: 4"]
+json = { "/total" = 4, "/files/1/path" = "sub/b.txt" }
+
+[[example]]
+name = "min filters"
+args = ["count-lines", "a.txt", "b.txt", "--min", "2"]
+files = { "a.txt" = "1\n2\n", "b.txt" = "1\n" }
+stdout = ["total: 2"]
+not_stdout = ["b.txt"]
+
+[[example]]
+name = "a missing file is an error"
+args = ["count-lines", "nope.txt"]
+exit = 1
+not_stdout = ["total"]

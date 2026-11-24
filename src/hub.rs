@@ -30,11 +30,16 @@ pub struct Listing {
 }
 
 fn http() -> ureq::Agent {
-    ureq::Agent::config_builder().http_status_as_error(false).timeout_global(Some(Duration::from_secs(15))).build().into()
+    ureq::Agent::config_builder()
+        .http_status_as_error(false)
+        .timeout_global(Some(Duration::from_secs(15)))
+        .build()
+        .into()
 }
 
 fn get(url: &str) -> Result<(u16, String)> {
-    let mut req = http().get(url).header("User-Agent", "anything-anything").header("Accept", "application/vnd.github+json");
+    let mut req =
+        http().get(url).header("User-Agent", "anything-anything").header("Accept", "application/vnd.github+json");
     if url.starts_with("https://api.github.com")
         && let Ok(token) = std::env::var("GITHUB_TOKEN").or_else(|_| std::env::var("GH_TOKEN"))
     {
@@ -61,7 +66,11 @@ fn snapshot() -> (Vec<Tool>, String) {
 }
 
 fn search_live(q: &str, limit: usize) -> Result<Vec<Tool>> {
-    let url = format!("https://api.github.com/search/repositories?q={}&sort=stars&order=desc&per_page={}", encode(q), limit.clamp(1, 100));
+    let url = format!(
+        "https://api.github.com/search/repositories?q={}&sort=stars&order=desc&per_page={}",
+        encode(q),
+        limit.clamp(1, 100)
+    );
     let (status, body) = get(&url)?;
     if status != 200 {
         bail!("GitHub answered {status}");
@@ -86,7 +95,11 @@ fn search_live(q: &str, limit: usize) -> Result<Vec<Tool>> {
 
 /// Tools whose name has "anything" in it, most stars first. words narrows it down.
 pub fn list(words: &str, limit: usize, offline: bool) -> Listing {
-    let q = if words.trim().is_empty() { "anything in:name".to_string() } else { format!("{} anything in:name,description", words.trim()) };
+    let q = if words.trim().is_empty() {
+        "anything in:name".to_string()
+    } else {
+        format!("{} anything in:name,description", words.trim())
+    };
     if !offline {
         match search_live(&q, limit) {
             Ok(tools) => return Listing { tools, offline: None },
@@ -145,7 +158,8 @@ pub fn show(repo: &str) -> Result<(Tool, Vec<Way>)> {
     let short = repo.rsplit('/').next().unwrap_or(&repo).to_string();
     let url = format!("https://github.com/{repo}");
     let mut ways = Vec::new();
-    let mut way = |label: &str, command: String, in_claude: bool| ways.push(Way { label: label.into(), command, in_claude });
+    let mut way =
+        |label: &str, command: String, in_claude: bool| ways.push(Way { label: label.into(), command, in_claude });
 
     let npm_name = |path: &str| -> Option<String> {
         let pkg: Value = serde_json::from_str(&raw(&repo, path)?).ok()?;
@@ -155,7 +169,9 @@ pub fn show(repo: &str) -> Result<(Tool, Vec<Way>)> {
         let name = pkg["name"].as_str()?.to_string();
         exists(&format!("https://registry.npmjs.org/{}", name.replace('/', "%2F"))).then_some(name)
     };
-    if let Some(name) = npm_name(&format!("npm/{short}/package.json")).or_else(|| if has("package.json") { npm_name("package.json") } else { None }) {
+    if let Some(name) = npm_name(&format!("npm/{short}/package.json"))
+        .or_else(|| if has("package.json") { npm_name("package.json") } else { None })
+    {
         way("npm", format!("npm i -g {name}"), false);
     }
     if has("pyproject.toml")
@@ -200,7 +216,13 @@ fn resolve(name: &str) -> Result<String> {
         .find(|t| t.repo.rsplit('/').next().is_some_and(|r| r.eq_ignore_ascii_case(name)))
         .or(hits.first())
         .map(|t| t.repo.clone())
-        .or_else(|| snapshot().0.into_iter().find(|t| t.repo.to_lowercase().ends_with(&format!("/{}", name.to_lowercase()))).map(|t| t.repo))
+        .or_else(|| {
+            snapshot()
+                .0
+                .into_iter()
+                .find(|t| t.repo.to_lowercase().ends_with(&format!("/{}", name.to_lowercase())))
+                .map(|t| t.repo)
+        })
         .with_context(|| format!("no -anything tool called {name}: try anything-anything hub search {name}"))
 }
 
@@ -238,7 +260,9 @@ mod tests {
         let (tools, updated) = snapshot();
         assert!(tools.len() > 10 && !updated.is_empty());
         let l = list("rust", 50, true);
-        assert!(l.offline.is_some() && l.tools.iter().all(|t| (t.repo.clone() + &t.about).to_lowercase().contains("rust")));
+        assert!(
+            l.offline.is_some() && l.tools.iter().all(|t| (t.repo.clone() + &t.about).to_lowercase().contains("rust"))
+        );
         assert_eq!(encode("a b/c"), "a+b%2Fc");
     }
 }

@@ -17,7 +17,13 @@ pub struct Outcome {
 }
 
 /// Runs argv in dir with stdout and stderr going to log.
-pub fn run(dir: &Path, argv: &[String], env: &BTreeMap<String, String>, timeout: Duration, log: &Path) -> Result<Outcome> {
+pub fn run(
+    dir: &Path,
+    argv: &[String],
+    env: &BTreeMap<String, String>,
+    timeout: Duration,
+    log: &Path,
+) -> Result<Outcome> {
     if let Some(parent) = log.parent() {
         std::fs::create_dir_all(parent)?;
     }

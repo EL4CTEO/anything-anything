@@ -33,7 +33,9 @@ use std::time::Duration;
 
 #[derive(Parser)]
 #[command(name = "anything-anything", version, about, arg_required_else_help = true)]
-#[command(after_help = "One command:\n  anything-anything new translate \"translate any app's UI strings to any language\" --agent claude\n\nStep by step:\n  anything-anything new translate \"...\" --stack python-cli   (no agent: write anything.toml yourself)\n  anything-anything build --agent claude\n  anything-anything verify\n  anything-anything publish")]
+#[command(
+    after_help = "One command:\n  anything-anything new translate \"translate any app's UI strings to any language\" --agent claude\n\nStep by step:\n  anything-anything new translate \"...\" --stack python-cli   (no agent: write anything.toml yourself)\n  anything-anything build --agent claude\n  anything-anything verify\n  anything-anything publish"
+)]
 struct Cli {
     /// Project folder (default: the current folder)
     #[arg(short = 'C', long = "dir", global = true, default_value = ".")]
@@ -67,7 +69,9 @@ impl AgentArgs {
     fn need(&self) -> Result<forge::AgentOpts> {
         match self.opts() {
             Some(o) => Ok(o),
-            None => bail!("which agent? --agent claude, --agent codex, or --agent \"any command that reads a prompt on stdin\""),
+            None => bail!(
+                "which agent? --agent claude, --agent codex, or --agent \"any command that reads a prompt on stdin\""
+            ),
         }
     }
 }
@@ -260,7 +264,11 @@ fn run(cmd: Cmd, root: &Path) -> Result<bool> {
                         ui::next(if has_agent {
                             format!("anything-anything -C {} design --agent claude", dir.display())
                         } else {
-                            format!("edit {}, or: anything-anything -C {} design --agent claude", dir.join(spec::FILE).display(), dir.display())
+                            format!(
+                                "edit {}, or: anything-anything -C {} design --agent claude",
+                                dir.join(spec::FILE).display(),
+                                dir.display()
+                            )
                         });
                     }
                     Ok(true)
@@ -269,7 +277,12 @@ fn run(cmd: Cmd, root: &Path) -> Result<bool> {
         }
         Cmd::Design { idea, agent } => {
             let spec = Spec::load(root)?;
-            forge::design(root, &idea.join(" "), Some(&spec.stack).filter(|s| *s != "any").map(|s| s.as_str()), &agent.need()?)?;
+            forge::design(
+                root,
+                &idea.join(" "),
+                Some(&spec.stack).filter(|s| *s != "any").map(|s| s.as_str()),
+                &agent.need()?,
+            )?;
             show::synced(&scaffold::sync(root, &Spec::load(root)?, false)?);
             ui::next("anything-anything build --agent claude");
             Ok(true)
@@ -334,11 +347,29 @@ mod tests {
 
     #[test]
     fn the_command_line() {
-        let cli = Cli::try_parse_from(["anything-anything", "new", "translate", "translate", "any", "app", "--agent", "claude", "--stack", "web"]).unwrap();
+        let cli = Cli::try_parse_from([
+            "anything-anything",
+            "new",
+            "translate",
+            "translate",
+            "any",
+            "app",
+            "--agent",
+            "claude",
+            "--stack",
+            "web",
+        ])
+        .unwrap();
         let Cmd::New { what, idea, stack, agent, .. } = cli.cmd else { panic!("not new") };
-        assert_eq!((what.as_str(), idea.join(" ").as_str(), stack.as_deref()), ("translate", "translate any app", Some("web")));
+        assert_eq!(
+            (what.as_str(), idea.join(" ").as_str(), stack.as_deref()),
+            ("translate", "translate any app", Some("web"))
+        );
         assert_eq!(agent.opts().unwrap().attempts, 3);
         assert!(Cli::try_parse_from(["anything-anything", "hub", "search"]).is_err());
-        assert!(matches!(Cli::try_parse_from(["anything-anything", "-C", "x", "verify", "--json"]).unwrap().cmd, Cmd::Verify { json: true }));
+        assert!(matches!(
+            Cli::try_parse_from(["anything-anything", "-C", "x", "verify", "--json"]).unwrap().cmd,
+            Cmd::Verify { json: true }
+        ));
     }
 }
