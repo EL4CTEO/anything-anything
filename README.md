@@ -17,6 +17,8 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-555" alt="MIT"></a>
 </p>
 
+<p align="center"><img src="https://raw.githubusercontent.com/EL4CTEO/anything-anything/main/docs/assets/trend.gif" alt="the -anything trend, explained" width="640"></p>
+
 Everyone's making an `-anything`. CLI-Anything, RAG-Anything, Understand-Anything, rust-anything, fast-anything...
 
 **anything-anything** makes yours. Describe it in one line. Your coding agent designs it, builds it in whatever stack fits, and keeps going until **its own examples prove it works**. It comes out as a real project: CLI, MCP server, Claude Code plugin, skill, CI, release workflow, README, logo.
