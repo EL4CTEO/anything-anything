@@ -1,0 +1,155 @@
+{
+  "updated": "2026-11-24",
+  "tools": [
+    {
+      "repo": "Egonex-AI/Understand-Anything",
+      "about": "Graphs that teach > graphs that impress. Turn any code into an interactive knowledge graph you can explore, search, and ask questions about. Works with Claude Code, Codex, Cursor, Copilot, Gemini CLI, and more.",
+      "stars": 93788,
+      "language": "TypeScript"
+    },
+    {
+      "repo": "Mintplex-Labs/anything-llm",
+      "about": "Stop renting your intelligence. Own it with AnythingLLM. Everything you need for a powerful local-first agent experience ",
+      "stars": 68561,
+      "language": "JavaScript"
+    },
+    {
+      "repo": "HKUDS/CLI-Anything",
+      "about": "\"CLI-Anything: Making ALL Software Agent-Native\" -- CLI-Hub: https://clianything.cc/",
+      "stars": 63587,
+      "language": "Python"
+    },
+    {
+      "repo": "facebookresearch/segment-anything",
+      "about": "The repository provides code for running inference with the SegmentAnything Model (SAM), links for downloading the trained model checkpoints, and example notebooks that show how to use the model.",
+      "stars": 55171,
+      "language": "Jupyter Notebook"
+    },
+    {
+      "repo": "storytold/craft-anything",
+      "about": "Craft Anything: understand how any software works, and craft your own.",
+      "stars": 42099,
+      "language": "Rust"
+    },
+    {
+      "repo": "HKUDS/RAG-Anything",
+      "about": "\"RAG-Anything: All-in-One RAG Framework\"",
+      "stars": 24783,
+      "language": "Python"
+    },
+    {
+      "repo": "veeral-patel/how-to-secure-anything",
+      "about": "How to systematically secure anything: a repository about security engineering",
+      "stars": 10267,
+      "language": ""
+    },
+    {
+      "repo": "DepthAnything/Depth-Anything-V2",
+      "about": "[NeurIPS 2024] Depth Anything V2. A More Capable Foundation Model for Monocular Depth Estimation",
+      "stars": 9207,
+      "language": "Python"
+    },
+    {
+      "repo": "erkamyaman/rust-anything",
+      "about": "Rewrite your whole app in Rust, one piece at a time, checked against the original's recorded behavior at every step. CLIs, HTTP servers and libraries in TypeScript, Python, C, Go, Ruby and Java.",
+      "stars": 8696,
+      "language": "Rust"
+    },
+    {
+      "repo": "zhayujie/bot-on-anything",
+      "about": "A large model-based chatbot builder that can quickly integrate AI models (including ChatGPT, Claude, Gemini) into various software applications (such as Telegram, Gmail, Slack, and websites).",
+      "stars": 4217,
+      "language": "Python"
+    },
+    {
+      "repo": "facebookresearch/map-anything",
+      "about": "MapAnything: Universal Feed-Forward Metric 3D Reconstruction",
+      "stars": 3925,
+      "language": "Python"
+    },
+    {
+      "repo": "Mouseww/anything-analyzer",
+      "about": "全能协议分析工具：浏览器抓包 + MITM 代理 + 指纹伪装 + AI 分析 + MCP Server 无缝对接 AI Agent/IDE   |  All-in-one protocol analysis toolkit — built-in browser capture, MITM proxy, JS hooks, fingerprint spoofing, AI analysis & MCP server for agent integration",
+      "stars": 3908,
+      "language": "TypeScript"
+    },
+    {
+      "repo": "goodnight000/api-anything",
+      "about": "Turn any website into an API your agent can call. Learns from the site's own frontend, heals itself when the site changes.",
+      "stars": 3797,
+      "language": "TypeScript"
+    },
+    {
+      "repo": "Vincentwei1021/anything2explainer",
+      "about": "Topic in, narrated explainer video out. A Claude Code / Codex skill that turns any topic into a black-canvas motion-graphics explainer video with TTS voiceover, subtitles and a chapter progress bar. Chinese or English; every frame drawn in code with Remotion.",
+      "stars": 3579,
+      "language": "TypeScript"
+    },
+    {
+      "repo": "yb2460/harness-anything",
+      "about": "Harness Anything - AI agent control hub: WPS, MS Office, Zotero, Photoshop, 47 CLI commands, 27 academic skills, SVG-to-PPTX",
+      "stars": 3245,
+      "language": "Python"
+    },
+    {
+      "repo": "wesbos/3d-model-anything",
+      "about": "Capture iPhone LiDAR and photos, reconstruct editable Three.js rooms, and explore them in a browser.",
+      "stars": 3129,
+      "language": "Swift"
+    },
+    {
+      "repo": "EL4CTEO/fast-anything",
+      "about": "Don't rewrite it in Rust. Rewrite the 5% that's slow: profile Python, Node or Ruby apps, port the hot functions with your coding agent, prove they behave the same.",
+      "stars": 3102,
+      "language": "Rust"
+    },
+    {
+      "repo": "cranebeaker/coop-anything",
+      "about": "Co-op Anything: point your AI agent at any single-player game and play it with friends (online and/or splitscreen!). MCP server and playbook to let you reverse engineer, fix, test, ship and share what it learns.",
+      "stars": 2199,
+      "language": "Python"
+    },
+    {
+      "repo": "NVlabs/describe-anything",
+      "about": "[ICCV 2025] Implementation for Describe Anything: Detailed Localized Image and Video Captioning",
+      "stars": 1525,
+      "language": "Python"
+    },
+    {
+      "repo": "zackees/transcribe-anything",
+      "about": "Multi-backend whisper app. Blazing fast. Mac-arm optimized. Easy install. Input a local file or url and this service will transcribe it using Whisper AI. Completely private and Free 🤯🤯🤯",
+      "stars": 1489,
+      "language": "Python"
+    },
+    {
+      "repo": "NabilRFG12/Reverse-Engineer-anything",
+      "about": "Reverse engineer anything with agents, from app behavior down to native binaries.",
+      "stars": 1346,
+      "language": ""
+    },
+    {
+      "repo": "StarlightSearch/EmbedAnything",
+      "about": "Highly Performant, Modular, Memory Safe and Production-ready Inference, Ingestion and Indexing built in Rust 🦀",
+      "stars": 1340,
+      "language": "Rust"
+    },
+    {
+      "repo": "Gen-Verse/RSI-Anything",
+      "about": "RSI-Anything: Unlocking Recursive Self-Improvement with World Models",
+      "stars": 1201,
+      "language": "HTML"
+    },
+    {
+      "repo": "facebookresearch/watermark-anything",
+      "about": "Official implementation of the paper \"Watermark Anything with Localized Messages\"",
+      "stars": 1133,
+      "language": "Jupyter Notebook"
+    },
+    {
+      "repo": "nexu-io/motion-anything",
+      "about": "✨ The agentic motion layer — an open-source, chat-native motion engine. Describe the feeling; your AI ships the animation.",
+      "stars": 1122,
+      "language": "JavaScript"
+    }
+  ]
+}

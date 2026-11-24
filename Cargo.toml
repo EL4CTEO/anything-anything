@@ -1,0 +1,30 @@
+[package]
+name = "anything-anything"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.88"
+description = "Make your own -anything tool: describe it in one line, your coding agent builds it, and its own tests prove it works. CLI, MCP server, Claude Code plugin and npm package included."
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/EL4CTEO/anything-anything"
+keywords = ["generator", "scaffolding", "mcp", "ai-agents", "cli"]
+categories = ["command-line-utilities", "development-tools"]
+exclude = ["examples", ".github", "docs/assets", "scripts"]
+
+[[bin]]
+name = "anything-anything"
+path = "src/main.rs"
+
+[dependencies]
+anyhow = "1.0.105"
+clap = { version = "4.6.9", features = ["derive"] }
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = { version = "1.0.154", features = ["preserve_order"] }
+toml = "1.2.2"
+toml_edit = "0.25.20"
+ureq = { version = "3.5.2", features = ["json"] }
+
+[profile.release]
+lto = "fat"
+codegen-units = 1
+strip = true

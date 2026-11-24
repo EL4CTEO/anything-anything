@@ -1,0 +1,22 @@
+{
+  "name": "{{npm}}",
+  "version": "{{version}}",
+  "description": {{pitch_json}},
+  "keywords": {{keywords_json}},
+  "homepage": "{{repo_url}}#readme",
+  "bugs": "{{repo_url}}/issues",
+  "repository": { "type": "git", "url": "git+{{repo_url}}.git" },
+  "license": "MIT",
+  "bin": { "{{name}}": "bin/{{name}}.js" },
+  "files": ["bin", "README.md", "LICENSE"],
+  "engines": { "node": ">=20" },
+  "optionalDependencies": {
+    "{{npm}}-win32-x64": "{{version}}",
+    "{{npm}}-win32-arm64": "{{version}}",
+    "{{npm}}-linux-x64": "{{version}}",
+    "{{npm}}-linux-arm64": "{{version}}",
+    "{{npm}}-darwin-arm64": "{{version}}",
+    "{{npm}}-darwin-x64": "{{version}}"
+  },
+  "publishConfig": { "access": "public" }
+}

@@ -1,0 +1,26 @@
+[package]
+name = "{{name}}"
+version = "{{version}}"
+edition = "2024"
+description = {{pitch_json}}
+license = "MIT"
+readme = "README.md"
+repository = "{{repo_url}}"
+keywords = ["cli", "mcp"]
+categories = ["command-line-utilities"]
+exclude = [".anything", ".github", "docs"]
+
+[[bin]]
+name = "{{name}}"
+path = "src/main.rs"
+
+[dependencies]
+anyhow = "1.0.105"
+clap = { version = "4.6.9", features = ["derive"] }
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.154"
+
+[profile.release]
+lto = "fat"
+codegen-units = 1
+strip = true

@@ -1,0 +1,10 @@
+{
+  "name": "{{name}}",
+  "version": "{{version}}",
+  "description": {{pitch_json}},
+  "author": { "name": "{{owner}}" },
+  "homepage": "{{repo_url}}",
+  "repository": "{{repo_url}}",
+  "license": "MIT",
+  "keywords": {{keywords_json}}
+}

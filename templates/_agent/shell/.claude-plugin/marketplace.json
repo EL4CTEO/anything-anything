@@ -1,0 +1,12 @@
+{
+  "name": "{{name}}",
+  "owner": { "name": "{{owner}}" },
+  "description": {{pitch_json}},
+  "plugins": [
+    {
+      "name": "{{name}}",
+      "source": "./",
+      "description": {{pitch_json}}
+    }
+  ]
+}

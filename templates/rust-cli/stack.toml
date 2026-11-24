@@ -1,0 +1,50 @@
+about = "A command-line tool in Rust (edition 2024): one fast binary, MCP server built in, on npm and crates.io"
+kind = "cli"
+codegen = "rust"
+include = ["_base", "_agent"]
+commands = true
+mcp = true
+install = "npm i -g {{npm}}   # or: cargo install {{name}}"
+stubs = ["todo!(", "unimplemented!("]
+sources = ["src"]
+brief = """
+Rust, edition 2024, latest stable toolchain. One binary.
+
+- `src/commands/<command>.rs` is yours, one per command: `pub fn run(args: &XArgs) -> Result<Output>`. Replace the stub.
+- `src/engine/` is yours: the logic the commands share. Put most of the code here, with unit tests (`#[cfg(test)]`).
+- `Cargo.toml` is yours: add the crates you need (latest versions).
+- Return `Output::new(text, json!({...}))`: text for people, data for `--json` and MCP. `.with_exit(1)` for a "found problems" exit.
+  Never print to stdout yourself (it's the MCP channel); progress goes to stderr through `crate::ui`.
+- Generated (don't edit): main.rs, mcp.rs, ui.rs, commands/mod.rs, commands/args.rs (the typed args, from anything.toml).
+- `cargo build`, `cargo clippy --all-targets -- -D warnings` and `cargo test` must pass; then the examples run against target/debug.
+"""
+
+[run]
+cmd = ["{root}/target/debug/{{name}}{exe}"]
+
+[[format]]
+ext = "rs"
+run = ["rustfmt", "--edition", "2024", "--emit", "stdout", "--config-path", "{root}"]
+
+[[step]]
+name = "format"
+run = ["cargo", "fmt"]
+probe = ["cargo", "fmt", "--version"]
+fix = true
+
+[[step]]
+name = "build"
+run = ["cargo", "build", "--all-targets"]
+timeout = 1800
+
+[[step]]
+name = "lint"
+run = ["cargo", "clippy", "--all-targets", "--", "-D", "warnings"]
+probe = ["cargo", "clippy", "--version"]
+soft = true
+timeout = 1800
+
+[[step]]
+name = "test"
+run = ["cargo", "test"]
+timeout = 1800
