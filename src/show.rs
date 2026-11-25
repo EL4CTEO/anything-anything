@@ -9,7 +9,14 @@ use crate::{ui, util};
 
 pub fn report(r: &Report) {
     ui::line("");
-    if r.ok {
+    if r.ok && !r.only.is_empty() {
+        ui::ok(ui::bold(format!(
+            "{}: every gate passes, {}/{} picked examples (run verify without --example for all of them)",
+            r.name,
+            r.passed(),
+            r.examples.len()
+        )));
+    } else if r.ok {
         ui::ok(ui::bold(format!("{} works: every gate passes, {}/{} examples", r.name, r.passed(), r.examples.len())));
     } else {
         let failing: Vec<&str> = r.failing().map(|g| g.name.as_str()).collect();

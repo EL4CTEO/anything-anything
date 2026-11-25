@@ -1,7 +1,7 @@
 //! Runs the examples: each in a fresh empty folder with its files, against the CLI, a shell line,
 //! or the server. Whatever the stack, this is what "it works" means.
 
-use crate::spec::{Example, Run, Spec};
+use crate::spec::{Example, Run};
 use crate::util;
 use anyhow::{Context, Result, bail};
 use serde::{Deserialize, Serialize};
@@ -223,7 +223,9 @@ fn process(root: &Path, run: &Run, e: &Example, with_json: bool) -> Result<Vec<S
     if with_json {
         check_json(e, &c.stdout, &mut problems);
     } else {
-        check_text(e, &format!("{}{}", c.stdout, if e.mode() == "sh" { c.stderr.as_str() } else { "" }), &mut problems);
+        // a shell line's stderr counts too, on its own line: a match can't straddle the two
+        let text = if e.mode() == "sh" { format!("{}\n{}", c.stdout, c.stderr) } else { c.stdout.clone() };
+        check_text(e, &text, &mut problems);
         if e.mode() == "sh" {
             check_json(e, &c.stdout, &mut problems);
         }
@@ -248,12 +250,8 @@ impl Drop for Server {
     }
 }
 
-fn agent() -> ureq::Agent {
-    ureq::Agent::config_builder()
-        .http_status_as_error(false)
-        .timeout_global(Some(Duration::from_secs(30)))
-        .build()
-        .into()
+fn agent(timeout: Duration) -> ureq::Agent {
+    ureq::Agent::config_builder().http_status_as_error(false).timeout_global(Some(timeout)).build().into()
 }
 
 pub fn start(root: &Path, run: &Run, log: &Path) -> Result<Server> {
@@ -303,7 +301,7 @@ fn request(server: &Server, e: &Example) -> Result<Vec<String>> {
     let method = parts.next().unwrap_or("GET");
     let path = parts.next().unwrap_or("/");
     let url = format!("http://127.0.0.1:{}{path}", server.port);
-    let http = agent();
+    let http = agent(timeout(e));
     let response = match method {
         "GET" => http.get(&url).call(),
         "HEAD" => http.head(&url).call(),
@@ -338,11 +336,11 @@ fn content_type(body: &str) -> &'static str {
     if body.trim_start().starts_with(['{', '[']) { "application/json" } else { "text/plain" }
 }
 
-/// Every example, in order. A server is started once for the http ones.
-pub fn run_all(root: &Path, spec: &Spec, run: &Run, log_dir: &Path) -> Vec<ExampleResult> {
+/// These examples, in order. A server is started once for the http ones.
+pub fn run_all(root: &Path, examples: &[&Example], run: &Run, log_dir: &Path) -> Vec<ExampleResult> {
     let mut server: Option<Result<Server, String>> = None;
     let mut out = Vec::new();
-    for e in &spec.examples {
+    for &e in examples {
         let start = Instant::now();
         let problems = match e.mode() {
             "http" => {

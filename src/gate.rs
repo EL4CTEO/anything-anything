@@ -4,7 +4,7 @@
 
 use crate::check::{self, ExampleResult};
 use crate::scaffold;
-use crate::spec::Spec;
+use crate::spec::{Example, Spec};
 use crate::stack::StackDef;
 use crate::state;
 use crate::{proc, ui, util};
@@ -43,6 +43,9 @@ pub struct Report {
     pub stack: String,
     pub gates: Vec<Gate>,
     pub examples: Vec<ExampleResult>,
+    /// Only the examples whose names contain one of these ran (verify --example). Empty: all of them.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub only: Vec<String>,
     pub at: u64,
 }
 
@@ -92,6 +95,18 @@ pub fn stubs(root: &Path, def: &StackDef) -> Vec<String> {
 }
 
 pub fn verify(root: &Path) -> Result<Report> {
+    verify_only(root, &[])
+}
+
+/// Whether an example is picked by `verify --example`: its name contains one of the words, any case.
+pub fn picks(name: &str, only: &[String]) -> bool {
+    let name = name.to_lowercase();
+    only.is_empty() || only.iter().any(|w| name.contains(&w.to_lowercase()))
+}
+
+/// verify, running only the examples `only` picks (all of them when it's empty). A partial run isn't
+/// remembered as the last verify: that one stays the whole truth.
+pub fn verify_only(root: &Path, only: &[String]) -> Result<Report> {
     let mut g = Gates(Vec::new());
     let start = Instant::now();
     let finish = |g: Gates, spec: Option<&Spec>, examples: Vec<ExampleResult>| -> Result<Report> {
@@ -101,9 +116,12 @@ pub fn verify(root: &Path) -> Result<Report> {
             stack: spec.map(|s| s.stack.clone()).unwrap_or_default(),
             gates: g.0,
             examples,
+            only: only.to_vec(),
             at: util::now(),
         };
-        state::remember(root, &report)?;
+        if only.is_empty() {
+            state::remember(root, &report)?;
+        }
         Ok(report)
     };
     let spec = match Spec::load(root) {
@@ -207,12 +225,26 @@ pub fn verify(root: &Path) -> Result<Report> {
     }
 
     let mut examples = Vec::new();
+    let picked: Vec<&Example> = spec.examples.iter().filter(|e| picks(&e.name, only)).collect();
     if let Some(after) = &blocked {
         g.add("examples", Status::Skip, 0.0, format!("skipped: {after} failed"));
-    } else if !spec.examples.is_empty() {
+    } else if picked.is_empty() && !only.is_empty() {
+        let all: Vec<String> = spec.examples.iter().map(|e| format!("{:?}", e.name)).collect();
+        g.add(
+            "examples",
+            Status::Fail,
+            0.0,
+            format!("no example's name contains {}; the examples are: {}", only.join(" or "), all.join(", ")),
+        );
+    } else if !picked.is_empty() {
         let t = Instant::now();
-        ui::step(format!("examples {}", ui::dim(format!("({})", spec.examples.len()))));
-        examples = check::run_all(root, &spec, &run, &state::logs(root));
+        let count = if only.is_empty() {
+            format!("({})", picked.len())
+        } else {
+            format!("({} of {})", picked.len(), spec.examples.len())
+        };
+        ui::step(format!("examples {}", ui::dim(count)));
+        examples = check::run_all(root, &picked, &run, &state::logs(root));
         for e in &examples {
             if e.ok {
                 ui::detail(format!("{} {}", ui::green("✓"), e.name));
@@ -319,4 +351,18 @@ fn mcp_check(root: &Path, spec: &Spec, run: &crate::spec::Run) -> Result<()> {
     let want: BTreeSet<String> = spec.commands.iter().map(|c| spec.tool(c)).collect();
     anyhow::ensure!(got == want, "tools/list should list {want:?}, got {got:?}");
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn example_picking() {
+        let only = |w: &[&str]| w.iter().map(|s| s.to_string()).collect::<Vec<_>>();
+        assert!(picks("hello world", &[]), "no filter runs everything");
+        assert!(picks("Hello World", &only(&["world"])));
+        assert!(picks("count lines", &only(&["nope", "COUNT"])));
+        assert!(!picks("hello world", &only(&["count"])));
+    }
 }

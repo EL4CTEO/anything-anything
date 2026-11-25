@@ -1,6 +1,6 @@
 {
   "name": "anything-anything",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "anything-anything. Literally anything. Describe a tool, app or game in a line: your coding agent builds it in any stack (Rust, Python, TypeScript, web, or anything else) and its own tests prove it works.",
   "author": {
     "name": "EL4CTEO"

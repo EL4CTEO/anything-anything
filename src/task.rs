@@ -131,7 +131,7 @@ pub fn build(spec: &Spec, def: &StackDef, last: Option<&Report>) -> String {
         writeln!(md, "- Update README.md (concise: what it does, install, usage, one real example) and CHANGELOG.md.");
     let _ = writeln!(
         md,
-        "- Run `anything-anything verify` after each piece of work. You're done when every gate passes.\n"
+        "- Run `anything-anything verify` after each piece of work (`--example <name>` re-runs only the examples you're fixing). You're done when a full verify passes every gate.\n"
     );
     if let Some(r) = last.filter(|r| !r.ok) {
         let _ = writeln!(md, "## What failed last time\n");

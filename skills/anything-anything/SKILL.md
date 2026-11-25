@@ -16,7 +16,7 @@ The same steps are MCP tools: `anything_spec_format`, `anything_create`, `anythi
    and examples that check real behaviour with exact output (`stdout`, `json`, `files_after`, `http`). At least two per command.
 3. **Create**: `anything-anything new <what> --spec anything.toml` (or `--stack <id>` and an idea). It generates the project and `.anything/TASK.md`.
 4. **Build**: do what `.anything/TASK.md` says. Write code only in the files that are yours (it lists the generated ones).
-5. **Verify** after each piece: `anything-anything verify`. Fix what fails. Done when every gate passes.
+5. **Verify** after each piece: `anything-anything verify`. Fix what fails; `--example <name>` re-runs only the examples you're fixing. Done when a full verify passes every gate.
 6. **Publish** only when the user says so: `anything-anything publish` shows the plan, `--yes` does it.
 
 Or hand the whole thing to another agent: `anything-anything new <what> "<idea>" --agent claude`.

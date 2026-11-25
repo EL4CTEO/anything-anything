@@ -1,6 +1,6 @@
 {
   "name": "@el4cteo/anything-anything",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "anything-anything. Literally anything. Describe a tool, app or game in a line: your coding agent builds it in any stack (Rust, Python, TypeScript, web, or anything else) and its own tests prove it works.",
   "keywords": [
     "anything",
@@ -40,12 +40,12 @@
     "node": ">=18"
   },
   "optionalDependencies": {
-    "@el4cteo/anything-anything-win32-x64": "0.1.0",
-    "@el4cteo/anything-anything-win32-arm64": "0.1.0",
-    "@el4cteo/anything-anything-linux-x64": "0.1.0",
-    "@el4cteo/anything-anything-linux-arm64": "0.1.0",
-    "@el4cteo/anything-anything-darwin-arm64": "0.1.0",
-    "@el4cteo/anything-anything-darwin-x64": "0.1.0"
+    "@el4cteo/anything-anything-win32-x64": "0.2.0",
+    "@el4cteo/anything-anything-win32-arm64": "0.2.0",
+    "@el4cteo/anything-anything-linux-x64": "0.2.0",
+    "@el4cteo/anything-anything-linux-arm64": "0.2.0",
+    "@el4cteo/anything-anything-darwin-arm64": "0.2.0",
+    "@el4cteo/anything-anything-darwin-x64": "0.2.0"
   },
   "publishConfig": {
     "access": "public"

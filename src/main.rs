@@ -168,6 +168,9 @@ enum Cmd {
     Verify {
         #[arg(long)]
         json: bool,
+        /// Only run the examples whose names contain this (any case; repeat it for more)
+        #[arg(long = "example", short = 'e', value_name = "TEXT")]
+        examples: Vec<String>,
     },
     /// The spec, the last verify and every build
     Status,
@@ -209,7 +212,9 @@ fn main() -> ExitCode {
 fn finish(report: &gate::Report, root: &Path) -> bool {
     show::report(report);
     if report.ok {
-        ui::next(format!("anything-anything -C {} publish", root.display()));
+        // a partial run proves only part of it: the whole verify comes before publish
+        let next = if report.only.is_empty() { "publish" } else { "verify" };
+        ui::next(format!("anything-anything -C {} {next}", root.display()));
     }
     report.ok
 }
@@ -221,9 +226,9 @@ fn run(cmd: Cmd, root: &Path) -> Result<bool> {
             println!("{}", spec::REFERENCE);
             return Ok(true);
         }
-        Cmd::Verify { json: true } => {
+        Cmd::Verify { json: true, examples } => {
             ui::set_quiet(true);
-            let r = gate::verify(root)?;
+            let r = gate::verify_only(root, &examples)?;
             println!("{}", serde_json::to_string_pretty(&r)?);
             return Ok(r.ok);
         }
@@ -302,8 +307,8 @@ fn run(cmd: Cmd, root: &Path) -> Result<bool> {
             show::synced(&s);
             Ok(!check || (s.created.is_empty() && s.updated.is_empty()))
         }
-        Cmd::Verify { .. } => {
-            let r = gate::verify(root)?;
+        Cmd::Verify { examples, .. } => {
+            let r = gate::verify_only(root, &examples)?;
             Ok(finish(&r, root))
         }
         Cmd::Status => {
@@ -369,7 +374,13 @@ mod tests {
         assert!(Cli::try_parse_from(["anything-anything", "hub", "search"]).is_err());
         assert!(matches!(
             Cli::try_parse_from(["anything-anything", "-C", "x", "verify", "--json"]).unwrap().cmd,
-            Cmd::Verify { json: true }
+            Cmd::Verify { json: true, ref examples } if examples.is_empty()
         ));
+        let Cmd::Verify { examples, .. } =
+            Cli::try_parse_from(["anything-anything", "verify", "--example", "hello", "-e", "count"]).unwrap().cmd
+        else {
+            panic!("not verify")
+        };
+        assert_eq!(examples, ["hello", "count"]);
     }
 }

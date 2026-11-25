@@ -103,3 +103,6 @@ env = {}
 `anything-anything verify` runs every gate, in order: **spec** (this file is valid), **files** (the generated files are as generated),
 **stubs** (nothing is left unbuilt), the stack's **steps** (format, build, lint, test), **mcp** (the server answers and lists every command),
 and **examples**. It passes when every gate does.
+
+`--example <text>` (`-e`, repeatable) runs only the examples whose names contain it, any case: the quick loop while fixing one.
+Every other gate still runs, and a partial run isn't saved as the last verify, so `status`, `TASK.md` and `publish` only ever trust a full one.

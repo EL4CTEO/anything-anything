@@ -73,7 +73,7 @@ A stack is [a folder of templates](templates) with a `stack.toml`. Adding one ne
 | `design --agent claude` | (re)write `anything.toml` from an idea |
 | `build --agent claude` | build until every gate passes (`--attempts`, `--minutes`) |
 | `task` | write `.anything/TASK.md` for any agent, or for you |
-| `verify` | every gate (`--json` for machines) |
+| `verify` | every gate (`--json` for machines, `--example <name>` to re-run just the examples you're fixing) |
 | `sync` | regenerate the plumbing after you change the spec. Never touches your code |
 | `status` | the spec, the last verify, every build |
 | `hub` | every -anything tool on GitHub (`search`, `show`, `install`, `made`) |

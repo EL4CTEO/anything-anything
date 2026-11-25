@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.0
+
+- `verify --example <text>` (`-e`, repeatable): re-run only the examples whose names match. Also on the MCP tool (`anything_verify` `examples`). Partial runs aren't saved as the last verify.
+- Fix: http examples ignored their `timeout` (always 30s); now they use it (default 60s, like every example).
+- Fix: shell examples could match `stdout` text spanning the end of stdout and the start of stderr.
+
 ## 0.1.0
 
 - `new`: an idea becomes a project. Your agent designs `anything.toml`, anything-anything generates the project, your agent builds it until every gate passes.

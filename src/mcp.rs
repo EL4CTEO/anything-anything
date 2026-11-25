@@ -57,8 +57,11 @@ fn tools() -> Value {
         ),
         tool(
             "anything_verify",
-            "Run every gate: spec, generated files, stubs, the stack's steps, MCP, examples. Returns what failed and why.",
-            json!({ "path": path }),
+            "Run every gate: spec, generated files, stubs, the stack's steps, MCP, examples. Returns what failed and why. \
+             Give examples to re-run only the ones you're fixing; finish with a run without it.",
+            json!({ "path": path,
+                    "examples": { "type": "array", "items": { "type": "string" },
+                                  "description": "Only run the examples whose names contain one of these (any case). Default: all" } }),
             json!([])
         ),
         tool(
@@ -132,7 +135,13 @@ fn call(name: &str, args: &Value) -> Result<Value> {
             let s = scaffold::sync(&r, &Spec::load(&r)?, false)?;
             json!({ "created": s.created, "updated": s.updated, "patched": s.patched, "unchanged": s.unchanged })
         }
-        "anything_verify" => serde_json::to_value(gate::verify(&root(args))?)?,
+        "anything_verify" => {
+            let only: Vec<String> = args["examples"]
+                .as_array()
+                .map(|a| a.iter().filter_map(Value::as_str).map(String::from).collect())
+                .unwrap_or_default();
+            serde_json::to_value(gate::verify_only(&root(args), &only)?)?
+        }
         "anything_status" => {
             let r = root(args);
             let spec = Spec::load(&r)?;
